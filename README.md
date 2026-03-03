@@ -16,12 +16,14 @@ Crear una plataforma educativa enfocada en contenido de alta calidad, aprendizaj
 
 El repositorio está dividido en tres módulos principales:
 
+```
+/
 ├── frontend/
 ├── backend/
 └── database/
+```
 
-
-### frontend/
+### `frontend/`
 
 Aplicación cliente responsable de la experiencia de usuario.
 
@@ -36,7 +38,7 @@ Aplicación cliente responsable de la experiencia de usuario.
 
 ---
 
-### backend/
+### `backend/`
 
 Servicio que expone la API y contiene la lógica de negocio.
 
@@ -52,7 +54,7 @@ Servicio que expone la API y contiene la lógica de negocio.
 
 ---
 
-### database/
+### `database/`
 
 Capa de persistencia y definición estructural de datos.
 
@@ -68,13 +70,13 @@ Capa de persistencia y definición estructural de datos.
 
 ## Funcionalidades Planeadas
 
-- Sistema de cursos y módulos
-- Reproductor de video con control de avance
-- Seguimiento de progreso por usuario
-- Evaluaciones y quizzes
-- Panel administrativo
-- Certificados de finalización
-- Dashboard de métricas
+- [ ] Sistema de cursos y módulos
+- [ ] Reproductor de video con control de avance
+- [ ] Seguimiento de progreso por usuario
+- [ ] Evaluaciones y quizzes
+- [ ] Panel administrativo
+- [ ] Certificados de finalización
+- [ ] Dashboard de métricas
 
 ---
 
@@ -86,24 +88,25 @@ Capa de persistencia y definición estructural de datos.
 
 ---
 
-## Stack Tecnológico (Evolutivo)
+## Stack Tecnológico
 
-El stack podrá evolucionar según necesidades del proyecto, pero está pensado para:
+> El stack podrá evolucionar según las necesidades del proyecto.
 
-- Frontend moderno SPA
-- Backend robusto y escalable
-- Base de datos relacional
-- Despliegue en infraestructura cloud
+- **Frontend:** SPA moderna
+- **Backend:** Robusto y escalable
+- **Base de datos:** Relacional
+- **Despliegue:** Infraestructura cloud
 
 ---
 
 ## Estado del Proyecto
 
-Proyecto en fase inicial de estructuración.
-Actualmente se define la arquitectura base y organización del repositorio.
+> 🚧 Proyecto en fase inicial de estructuración.
+
+Actualmente se define la arquitectura base y la organización del repositorio.
 
 ---
 
 ## Contribución
 
-Las contribuciones serán definidas en futuras versiones del proyecto.
+Las guías de contribución serán definidas en futuras versiones del proyecto.

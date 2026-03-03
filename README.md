@@ -9,6 +9,7 @@ El proyecto está organizado bajo una arquitectura desacoplada en tres capas pri
 
 | Nombre | Carnet |
 |---|---|
+| Rodrigo Alexis Mercado Calidonio | MC24029 |
 | Kevin Manuel Lemus Najarro | LN13002 |
 
 ---

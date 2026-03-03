@@ -5,6 +5,13 @@ Plataforma educativa moderna diseñada para ofrecer contenido en video, recursos
 El proyecto está organizado bajo una arquitectura desacoplada en tres capas principales: **Frontend**, **Backend** y **Database**, permitiendo escalabilidad, mantenibilidad y evolución independiente de cada componente.
 
 ---
+## Integrantes
+
+| Nombre | Carnet |
+|---|---|
+| Rodrigo Alexis Mercado Calidonio | MC24029 |
+
+---
 
 ## Visión
 

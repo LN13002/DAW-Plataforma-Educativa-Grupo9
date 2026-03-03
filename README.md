@@ -11,6 +11,7 @@ El proyecto está organizado bajo una arquitectura desacoplada en tres capas pri
 |---|---|
 | Rodrigo Alexis Mercado Calidonio | MC24029 |
 | Kevin Manuel Lemus Najarro | LN13002 |
+| Jose Gerardo Pleites Campos| PC24020 |
 
 ---
 

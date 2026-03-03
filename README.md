@@ -10,6 +10,7 @@ El proyecto está organizado bajo una arquitectura desacoplada en tres capas pri
 | Nombre | Carnet |
 |---|---|
 | Rodrigo Alexis Mercado Calidonio | MC24029 |
+| Kevin Manuel Lemus Najarro | LN13002 |
 
 ---
 
@@ -51,13 +52,11 @@ Servicio que expone la API y contiene la lógica de negocio.
 
 **Responsabilidades:**
 
-- API (REST o GraphQL)
+- API
 - Autenticación y autorización
 - Gestión de usuarios
 - Gestión de cursos y módulos
 - Seguimiento de progreso
-- Evaluaciones y certificaciones
-- Integraciones externas
 
 ---
 
@@ -80,9 +79,7 @@ Capa de persistencia y definición estructural de datos.
 - [ ] Sistema de cursos y módulos
 - [ ] Reproductor de video con control de avance
 - [ ] Seguimiento de progreso por usuario
-- [ ] Evaluaciones y quizzes
 - [ ] Panel administrativo
-- [ ] Certificados de finalización
 - [ ] Dashboard de métricas
 
 ---
@@ -111,8 +108,6 @@ Capa de persistencia y definición estructural de datos.
 > 🚧 Proyecto en fase inicial de estructuración.
 
 Actualmente se define la arquitectura base y la organización del repositorio.
-
----
 
 ## Contribución
 

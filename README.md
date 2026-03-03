@@ -13,6 +13,7 @@ El proyecto está organizado bajo una arquitectura desacoplada en tres capas pri
 | Kevin Manuel Lemus Najarro | LN13002 |
 | Jose Gerardo Pleites Campos| PC24020 |
 | Salvador Ernesto Ventura Vasquez| VV24014 |
+| Kevin Geovanni Gonzalez Salazar | GS24037 |
 
 
 ---

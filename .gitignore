@@ -1,0 +1,105 @@
+#################################################
+# ROOT
+#################################################
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env files
+.env
+.env.*
+!.env.example
+
+#################################################
+# FRONTEND (React)
+#################################################
+
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.next/
+frontend/.vite/
+frontend/.turbo/
+frontend/coverage/
+
+# React / Vite cache
+frontend/.eslintcache
+frontend/.cache/
+
+# Lockfiles (opcional, mantener solo uno si usas npm o yarn)
+frontend/package-lock.json
+frontend/yarn.lock
+frontend/pnpm-lock.yaml
+
+#################################################
+# BACKEND (Spring Boot)
+#################################################
+
+# Maven
+backend/target/
+backend/pom.xml.tag
+backend/pom.xml.releaseBackup
+backend/pom.xml.versionsBackup
+backend/pom.xml.next
+backend/release.properties
+backend/dependency-reduced-pom.xml
+backend/buildNumber.properties
+
+# Gradle
+backend/.gradle/
+backend/build/
+
+# Logs
+backend/*.log
+
+# Spring Boot
+backend/application-local.yml
+backend/application-dev.yml
+backend/application-prod.yml
+
+#################################################
+# DATABASE
+#################################################
+
+# Local database files
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+
+#################################################
+# IDEs
+#################################################
+
+# IntelliJ
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+#################################################
+# Java compiled files
+#################################################
+
+*.class
+
+#################################################
+# Misc
+#################################################
+
+coverage/
+tmp/
+temp/

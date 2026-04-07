@@ -34,6 +34,7 @@ run = "./mvnw flyway:migrate -Dflyway.url=jdbc:postgresql://${DB_HOST}:${DB_PORT
 description = "Start the Spring Boot backend and open Swagger UI"
 dir = "backend"
 run = """
+fuser -k 8080/tcp 2>/dev/null || true
 ./mvnw spring-boot:run &
 APP_PID=$!
 echo "Waiting for backend to be ready..."

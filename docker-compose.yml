@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: aprende_ues_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aprende_ues
+      POSTGRES_USER: aprende_ues
+      POSTGRES_PASSWORD: aprende_ues
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aprende_ues -d aprende_ues"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

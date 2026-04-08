@@ -28,12 +28,16 @@ run = "docker compose logs -f db"
 [tasks."db:migrate"]
 description = "Run pending Flyway migrations without starting the app"
 dir = "backend"
-run = "./mvnw flyway:migrate -Dflyway.url=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME} -Dflyway.user=${DB_USER} -Dflyway.password=${DB_PASSWORD}"
+run = [
+  { os = ["linux", "macos"], run = "./mvnw flyway:migrate -Dflyway.url=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME} -Dflyway.user=${DB_USER} -Dflyway.password=${DB_PASSWORD}" },
+  { os = "windows", run = ".\\mvnw.cmd flyway:migrate -Dflyway.url=jdbc:postgresql://$env:DB_HOST`:$env:DB_PORT/$env:DB_NAME -Dflyway.user=$env:DB_USER -Dflyway.password=$env:DB_PASSWORD" }
+]
 
 [tasks.backend]
 description = "Start the Spring Boot backend and open Swagger UI"
 dir = "backend"
-run = """
+run = [
+  { os = ["linux", "macos"], run = """
 fuser -k 8080/tcp 2>/dev/null || true
 ./mvnw spring-boot:run &
 APP_PID=$!
@@ -41,4 +45,15 @@ echo "Waiting for backend to be ready..."
 until curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; do sleep 2; done
 xdg-open "http://localhost:8080/swagger-ui.html"
 wait $APP_PID
-"""
+""" },
+  { os = "windows", run = """
+$port = 8080
+$conn = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+if ($conn) { Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue }
+$job = Start-Job -ScriptBlock { Set-Location "$using:PWD"; .\\mvnw.cmd spring-boot:run }
+Write-Host "Waiting for backend to be ready..."
+while (-not (Invoke-WebRequest -Uri "http://localhost:8080/actuator/health" -UseBasicParsing -ErrorAction SilentlyContinue)) { Start-Sleep 2 }
+Start-Process "http://localhost:8080/swagger-ui.html"
+Receive-Job -Job $job -Wait
+""" }
+]

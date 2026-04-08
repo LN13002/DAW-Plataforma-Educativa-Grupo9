@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# mise description="Start the Spring Boot backend and open Swagger UI"
+
+cd "$MISE_PROJECT_ROOT/backend"
+
+fuser -k 8080/tcp 2>/dev/null || true
+./mvnw spring-boot:run &
+APP_PID=$!
+echo "Waiting for backend to be ready..."
+until curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; do sleep 2; done
+xdg-open "http://localhost:8080/swagger-ui.html"
+wait $APP_PID

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# mise description="Run pending Flyway migrations without starting the app"
+
+cd "$MISE_PROJECT_ROOT/backend"
+
+./mvnw flyway:migrate \
+  -Dflyway.url=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME} \
+  -Dflyway.user=${DB_USER} \
+  -Dflyway.password=${DB_PASSWORD}

@@ -3,6 +3,7 @@ package com.aprende.ues.backend.controller;
 import com.aprende.ues.backend.dto.CategoryRequestDTO;
 import com.aprende.ues.backend.dto.CategoryResponseDTO;
 import com.aprende.ues.backend.service.CategoryService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Categories", description = "CRUD operations for course categories")
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor

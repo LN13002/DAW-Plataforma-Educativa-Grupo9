@@ -40,6 +40,19 @@ public class RestExceptionHandler {
         return ResponseEntity.badRequest().body(error);
     }
 
+    // Review
+    @ExceptionHandler(ReviewNotFoundException.class)
+    public ResponseEntity<ErrorDTO> handleException(ReviewNotFoundException e) {
+        ErrorDTO error = new ErrorDTO("review-not-found", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(ReviewAlreadyExistsException.class)
+    public ResponseEntity<ErrorDTO> handleException(ReviewAlreadyExistsException e) {
+        ErrorDTO error = new ErrorDTO("review-already-exists", e.getMessage());
+        return ResponseEntity.badRequest().body(error);
+    }
+
     // VALIDATION: It will display a list of errors for fields that do not comply with the validation constraints
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<ErrorDTO>> handleException(MethodArgumentNotValidException e) {

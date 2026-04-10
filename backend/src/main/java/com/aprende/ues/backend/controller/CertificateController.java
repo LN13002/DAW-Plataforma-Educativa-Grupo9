@@ -19,14 +19,10 @@ public class CertificateController {
 
     private final CertificateService certificateService;
 
-    // ── GET ALL ──────────────────────────────────────────────────────────────
-
     @GetMapping
     public ResponseEntity<List<CertificateResponseDTO>> getAll() {
         return ResponseEntity.ok(certificateService.getAll());
     }
-
-    // ── GET BY ID ────────────────────────────────────────────────────────────
 
     @GetMapping("/{id}")
     public ResponseEntity<CertificateResponseDTO> getById(@PathVariable UUID id) {
@@ -48,8 +44,6 @@ public class CertificateController {
 
         return ResponseEntity.ok(certificateService.update(id, request));
     }
-
-    // ── DELETE ───────────────────────────────────────────────────────────────
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {

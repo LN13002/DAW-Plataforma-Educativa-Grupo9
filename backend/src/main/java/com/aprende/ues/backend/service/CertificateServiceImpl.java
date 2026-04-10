@@ -2,8 +2,13 @@ package com.aprende.ues.backend.service;
 
 import com.aprende.ues.backend.dto.CertificateRequestDTO;
 import com.aprende.ues.backend.dto.CertificateResponseDTO;
+import com.aprende.ues.backend.exceptions.CertificateCodeAlreadyExistsException;
+import com.aprende.ues.backend.exceptions.CertificateNotFoundException;
+import com.aprende.ues.backend.exceptions.EnrollmentAlreadyCertifiedException;
+import com.aprende.ues.backend.exceptions.EnrollmentNotFoundException;
 import com.aprende.ues.backend.model.Certificate;
 import com.aprende.ues.backend.repository.CertificateRepository;
+import com.aprende.ues.backend.repository.EnrollmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +21,7 @@ import java.util.UUID;
 public class CertificateServiceImpl implements CertificateService {
 
     private final CertificateRepository certificateRepository;
-    //private final EnrollmentRepository enrollmentRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -31,8 +36,7 @@ public class CertificateServiceImpl implements CertificateService {
     @Transactional(readOnly = true)
     public CertificateResponseDTO getById(UUID id) {
         Certificate certificate = certificateRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
-                        "The certificate with id: " + id + " was not found"));
+                .orElseThrow(() -> new CertificateNotFoundException(id.toString()));
 
         return toResponseDTO(certificate);
     }
@@ -43,19 +47,17 @@ public class CertificateServiceImpl implements CertificateService {
 
         // 1. The enrollment must exist
         var enrollment = enrollmentRepository.findById(request.enrollmentId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Enrollment with id: " + request.enrollmentId() + " was not found"));
+                .orElseThrow(() -> new EnrollmentNotFoundException(
+                        request.enrollmentId().toString()));
 
         // 2. The enrollment must not already have a certificate (1-to-1 relationship)
         if (certificateRepository.existsByEnrollmentId(request.enrollmentId())) {
-            throw new RuntimeException(
-                    "The enrollment already has an issued certificate: " + request.enrollmentId());
+            throw new EnrollmentAlreadyCertifiedException(request.enrollmentId().toString());
         }
 
         // 3. The code must be unique
         if (certificateRepository.existsByCode(request.code())) {
-            throw new RuntimeException(
-                    "A certificate with the code already exists: " + request.code());
+            throw new CertificateCodeAlreadyExistsException(request.code());
         }
 
         Certificate certificate = new Certificate();
@@ -71,14 +73,12 @@ public class CertificateServiceImpl implements CertificateService {
     public CertificateResponseDTO update(UUID id, CertificateRequestDTO request) {
 
         Certificate certificate = certificateRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
-                        "Certificate not found with id: " + id));
+                .orElseThrow(() -> new CertificateNotFoundException(id.toString()));
 
         // If the code changes, verify that the new one is not already used by another certificate
         boolean codeChanged = !certificate.getCode().equals(request.code());
         if (codeChanged && certificateRepository.existsByCode(request.code())) {
-            throw new RuntimeException(
-                    "A certificate with the code already exists: " + request.code());
+            throw new CertificateCodeAlreadyExistsException(request.code());
         }
 
         certificate.setCode(request.code());
@@ -92,8 +92,7 @@ public class CertificateServiceImpl implements CertificateService {
     @Transactional
     public void delete(UUID id) {
         if (!certificateRepository.existsById(id)) {
-            throw new RuntimeException(
-                    "Certificate not found with id: " + id);
+            throw new CertificateNotFoundException(id.toString());
         }
         certificateRepository.deleteById(id);
     }

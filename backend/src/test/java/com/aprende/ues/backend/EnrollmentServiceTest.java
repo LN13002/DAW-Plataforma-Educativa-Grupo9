@@ -1,4 +1,5 @@
-package com.aprende.ues.backend.service;
+package com.aprende.ues.backend;
+import com.aprende.ues.backend.service.EnrollmentService;
 
 import com.aprende.ues.backend.dto.EnrollmentRequestDTO;
 import com.aprende.ues.backend.dto.EnrollmentResponseDTO;
@@ -44,7 +45,7 @@ class EnrollmentServiceTest {
     @InjectMocks
     private EnrollmentService enrollmentService;
 
-    // ─── Helpers ────────────────────────────────────────────────────────────────
+    
 
     private User buildUser(UUID id, String firstName, String lastName) {
         User user = new User();
@@ -74,20 +75,18 @@ class EnrollmentServiceTest {
         return enrollment;
     }
 
-    // ─── findAll ─────────────────────────────────────────────────────────────────
-
     @Test
     void findAll_withEnrollments_returnsMappedList() {
-        // Arrange
+     
         User user = buildUser(UUID.randomUUID(), "Carlos", "Lopez");
         Course course = buildCourse(UUID.randomUUID(), "Spring Boot Avanzado");
         Enrollment enrollment = buildEnrollment(UUID.randomUUID(), user, course);
         when(enrollmentRepository.findAll()).thenReturn(List.of(enrollment));
 
-        // Act
+  
         List<EnrollmentResponseDTO> result = enrollmentService.findAll();
 
-        // Assert
+   
         assertThat(result).hasSize(1);
         assertThat(result.get(0).studentName()).isEqualTo("Carlos Lopez");
         assertThat(result.get(0).courseTitle()).isEqualTo("Spring Boot Avanzado");
@@ -96,31 +95,28 @@ class EnrollmentServiceTest {
 
     @Test
     void findAll_withNoEnrollments_returnsEmptyList() {
-        // Arrange
+       
         when(enrollmentRepository.findAll()).thenReturn(List.of());
 
-        // Act
+   
         List<EnrollmentResponseDTO> result = enrollmentService.findAll();
 
-        // Assert
         assertThat(result).isEmpty();
     }
 
-    // ─── findById ────────────────────────────────────────────────────────────────
-
+   
     @Test
     void findById_existingId_returnsDTO() {
-        // Arrange
+      
         UUID id = UUID.randomUUID();
         User user = buildUser(UUID.randomUUID(), "Andrea", "Torres");
         Course course = buildCourse(UUID.randomUUID(), "React desde cero");
         Enrollment enrollment = buildEnrollment(id, user, course);
         when(enrollmentRepository.findById(id)).thenReturn(Optional.of(enrollment));
 
-        // Act
+     
         EnrollmentResponseDTO result = enrollmentService.findById(id);
 
-        // Assert
         assertThat(result.id()).isEqualTo(id);
         assertThat(result.studentName()).isEqualTo("Andrea Torres");
         assertThat(result.courseTitle()).isEqualTo("React desde cero");
@@ -128,22 +124,22 @@ class EnrollmentServiceTest {
 
     @Test
     void findById_nonExistingId_throws404() {
-        // Arrange
+       
         UUID id = UUID.randomUUID();
         when(enrollmentRepository.findById(id)).thenReturn(Optional.empty());
 
-        // Act & Assert
+        
         assertThatThrownBy(() -> enrollmentService.findById(id))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
                         .isEqualTo(HttpStatus.NOT_FOUND));
     }
 
-    // ─── findByUser ──────────────────────────────────────────────────────────────
+
 
     @Test
     void findByUser_existingUser_returnsEnrollmentList() {
-        // Arrange
+        
         UUID userId = UUID.randomUUID();
         User user = buildUser(userId, "Miguel", "Hernandez");
         Course course = buildCourse(UUID.randomUUID(), "Java 21");
@@ -151,32 +147,32 @@ class EnrollmentServiceTest {
         when(userRepository.existsById(userId)).thenReturn(true);
         when(enrollmentRepository.findByUserId(userId)).thenReturn(List.of(enrollment));
 
-        // Act
+       
         List<EnrollmentResponseDTO> result = enrollmentService.findByUser(userId);
 
-        // Assert
+      
         assertThat(result).hasSize(1);
         assertThat(result.get(0).userId()).isEqualTo(userId);
     }
 
     @Test
     void findByUser_nonExistingUser_throws404() {
-        // Arrange
+       
         UUID userId = UUID.randomUUID();
         when(userRepository.existsById(userId)).thenReturn(false);
 
-        // Act & Assert
+    
         assertThatThrownBy(() -> enrollmentService.findByUser(userId))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
                         .isEqualTo(HttpStatus.NOT_FOUND));
     }
 
-    // ─── findByCourse ────────────────────────────────────────────────────────────
+  
 
     @Test
     void findByCourse_existingCourse_returnsEnrollmentList() {
-        // Arrange
+        
         UUID courseId = UUID.randomUUID();
         User user = buildUser(UUID.randomUUID(), "Laura", "Sanchez");
         Course course = buildCourse(courseId, "Docker y Kubernetes");
@@ -184,32 +180,30 @@ class EnrollmentServiceTest {
         when(courseRepository.existsById(courseId)).thenReturn(true);
         when(enrollmentRepository.findByCourseId(courseId)).thenReturn(List.of(enrollment));
 
-        // Act
         List<EnrollmentResponseDTO> result = enrollmentService.findByCourse(courseId);
 
-        // Assert
+      
         assertThat(result).hasSize(1);
         assertThat(result.get(0).courseId()).isEqualTo(courseId);
     }
 
     @Test
     void findByCourse_nonExistingCourse_throws404() {
-        // Arrange
+      
         UUID courseId = UUID.randomUUID();
         when(courseRepository.existsById(courseId)).thenReturn(false);
 
-        // Act & Assert
+       
         assertThatThrownBy(() -> enrollmentService.findByCourse(courseId))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
                         .isEqualTo(HttpStatus.NOT_FOUND));
     }
 
-    // ─── create ──────────────────────────────────────────────────────────────────
-
+    
     @Test
     void create_validRequest_returnsCreatedEnrollment() {
-        // Arrange
+       
         UUID userId = UUID.randomUUID();
         UUID courseId = UUID.randomUUID();
         User user = buildUser(userId, "Roberto", "Cruz");
@@ -223,10 +217,10 @@ class EnrollmentServiceTest {
 
         EnrollmentRequestDTO request = new EnrollmentRequestDTO(userId, courseId);
 
-        // Act
+       
         EnrollmentResponseDTO result = enrollmentService.create(request);
 
-        // Assert
+       
         assertThat(result.userId()).isEqualTo(userId);
         assertThat(result.courseId()).isEqualTo(courseId);
         assertThat(result.status()).isEqualTo(EnrollmentStatus.active);
@@ -236,14 +230,14 @@ class EnrollmentServiceTest {
 
     @Test
     void create_duplicateEnrollment_throws409() {
-        // Arrange
+        
         UUID userId = UUID.randomUUID();
         UUID courseId = UUID.randomUUID();
         when(enrollmentRepository.existsByUserIdAndCourseId(userId, courseId)).thenReturn(true);
 
         EnrollmentRequestDTO request = new EnrollmentRequestDTO(userId, courseId);
 
-        // Act & Assert
+        
         assertThatThrownBy(() -> enrollmentService.create(request))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
@@ -254,7 +248,7 @@ class EnrollmentServiceTest {
 
     @Test
     void create_nonExistingUser_throws404() {
-        // Arrange
+     
         UUID userId = UUID.randomUUID();
         UUID courseId = UUID.randomUUID();
         when(enrollmentRepository.existsByUserIdAndCourseId(userId, courseId)).thenReturn(false);
@@ -262,7 +256,6 @@ class EnrollmentServiceTest {
 
         EnrollmentRequestDTO request = new EnrollmentRequestDTO(userId, courseId);
 
-        // Act & Assert
         assertThatThrownBy(() -> enrollmentService.create(request))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
@@ -273,7 +266,7 @@ class EnrollmentServiceTest {
 
     @Test
     void create_nonExistingCourse_throws404() {
-        // Arrange
+        
         UUID userId = UUID.randomUUID();
         UUID courseId = UUID.randomUUID();
         User user = buildUser(userId, "Carlos", "Lopez");
@@ -283,7 +276,7 @@ class EnrollmentServiceTest {
 
         EnrollmentRequestDTO request = new EnrollmentRequestDTO(userId, courseId);
 
-        // Act & Assert
+      
         assertThatThrownBy(() -> enrollmentService.create(request))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
@@ -292,11 +285,10 @@ class EnrollmentServiceTest {
         verify(enrollmentRepository, never()).save(any());
     }
 
-    // ─── updateStatus ────────────────────────────────────────────────────────────
 
     @Test
     void updateStatus_existingEnrollment_returnsUpdatedDTO() {
-        // Arrange
+    
         UUID id = UUID.randomUUID();
         User user = buildUser(UUID.randomUUID(), "Ana", "Gutierrez");
         Course course = buildCourse(UUID.randomUUID(), "Machine Learning");
@@ -310,23 +302,23 @@ class EnrollmentServiceTest {
 
         EnrollmentStatusRequestDTO request = new EnrollmentStatusRequestDTO(EnrollmentStatus.completed);
 
-        // Act
+        
         EnrollmentResponseDTO result = enrollmentService.updateStatus(id, request);
 
-        // Assert
+        
         assertThat(result.status()).isEqualTo(EnrollmentStatus.completed);
         verify(enrollmentRepository).save(enrollment);
     }
 
     @Test
     void updateStatus_nonExistingEnrollment_throws404() {
-        // Arrange
+        
         UUID id = UUID.randomUUID();
         when(enrollmentRepository.findById(id)).thenReturn(Optional.empty());
 
         EnrollmentStatusRequestDTO request = new EnrollmentStatusRequestDTO(EnrollmentStatus.cancelled);
 
-        // Act & Assert
+        
         assertThatThrownBy(() -> enrollmentService.updateStatus(id, request))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
@@ -335,28 +327,26 @@ class EnrollmentServiceTest {
         verify(enrollmentRepository, never()).save(any());
     }
 
-    // ─── delete ──────────────────────────────────────────────────────────────────
 
     @Test
     void delete_existingEnrollment_deletesSuccessfully() {
-        // Arrange
+        
         UUID id = UUID.randomUUID();
         when(enrollmentRepository.existsById(id)).thenReturn(true);
 
-        // Act
+        
         enrollmentService.delete(id);
 
-        // Assert
+        
         verify(enrollmentRepository).deleteById(id);
     }
 
     @Test
     void delete_nonExistingEnrollment_throws404() {
-        // Arrange
+       
         UUID id = UUID.randomUUID();
         when(enrollmentRepository.existsById(id)).thenReturn(false);
 
-        // Act & Assert
         assertThatThrownBy(() -> enrollmentService.delete(id))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())

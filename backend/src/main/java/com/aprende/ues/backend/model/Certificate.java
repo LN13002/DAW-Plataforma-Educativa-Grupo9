@@ -18,10 +18,6 @@ public class Certificate {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "enrollment_id", nullable = false, unique = true)
-    private Enrollment enrollment;
-
     @Column(nullable = false, length = 64, unique = true)
     private String code;
 
@@ -30,4 +26,8 @@ public class Certificate {
 
     @Column(name = "issued_at", nullable = false, updatable = false)
     private OffsetDateTime issuedAt = OffsetDateTime.now();
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "enrollment_id", nullable = false, unique = true)
+    private Enrollment enrollment;
 }

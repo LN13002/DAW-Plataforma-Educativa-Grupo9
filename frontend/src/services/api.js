@@ -1,0 +1,124 @@
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
+
+async function request(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    ...options,
+  })
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => response.statusText)
+    throw new Error(message || `Request failed: ${response.status}`)
+  }
+
+  if (response.status === 204) return null
+  return response.json()
+}
+
+export const api = {
+  getUsers: () => request('/api/users'),
+  createUser: (payload) =>
+    request('/api/users', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getCategories: () => request('/api/categories'),
+  getCourses: () => request('/api/courses'),
+  getModules: () => request('/api/modules'),
+  getLessons: () => request('/api/lessons'),
+  getEnrollments: () => request('/api/enrollments'),
+  getCertificates: () => request('/api/certificates'),
+  getReviews: () => request('/api/reviews'),
+  getComments: () => request('/api/comments'),
+  getLessonProgress: () => request('/api/lesson-progress'),
+
+  createEnrollment: (payload) =>
+    request('/api/enrollments', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  upsertLessonProgress: (payload) =>
+    request('/api/lesson-progress', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+}
+
+const fallbackImages = [
+  'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1532187643603-ba119ca4109e?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=900&q=80',
+]
+
+function levelLabel(level) {
+  const labels = {
+    beginner: 'Inicial',
+    intermediate: 'Intermedio',
+    advanced: 'Avanzado',
+  }
+  return labels[level] ?? level ?? 'General'
+}
+
+export function mapCourseDto(course, index = 0, enrollments = []) {
+  const enrollment = enrollments.find((item) => item.courseId === course.id)
+
+  return {
+    id: course.id,
+    title: course.title,
+    instructor: course.instructorName ?? 'Instructor UES',
+    instructorId: course.instructorId,
+    category: course.categoryName ?? 'General',
+    categoryId: course.categoryId,
+    progress: Number(enrollment?.progress ?? 0),
+    enrollmentId: enrollment?.id,
+    enrollmentStatus: enrollment?.status,
+    duration: 'Contenido bajo demanda',
+    rating: 4.8,
+    students: 0,
+    price: 'Gratis',
+    level: levelLabel(course.level),
+    status: course.status,
+    description: course.description ?? 'Curso disponible en la plataforma educativa UES Virtual.',
+    image: course.thumbnailUrl || fallbackImages[index % fallbackImages.length],
+  }
+}
+
+export function mapCategoryDto(category) {
+  return category.name
+}
+
+export function mapLessonDto(lesson, activeLessonId) {
+  const minutes = Math.max(1, Math.round((lesson.durationSeconds ?? 0) / 60))
+
+  return {
+    id: lesson.id,
+    moduleId: lesson.moduleId,
+    title: `${lesson.position}. ${lesson.title}`,
+    rawTitle: lesson.title,
+    description: lesson.description,
+    videoUrl: lesson.videoUrl,
+    duration: `${minutes} min`,
+    durationSeconds: lesson.durationSeconds ?? 0,
+    type: lesson.type,
+    preview: lesson.preview,
+    published: lesson.published,
+    status: lesson.id === activeLessonId ? 'active' : lesson.published ? 'available' : 'locked',
+  }
+}
+
+export function mapCertificateDto(certificate) {
+  return {
+    id: certificate.code ?? certificate.id,
+    title: `Certificado ${certificate.code ?? ''}`.trim(),
+    issuedAt: certificate.issuedAt ? new Date(certificate.issuedAt).toLocaleDateString('es-SV') : 'Pendiente',
+    pdfUrl: certificate.pdfUrl,
+    enrollmentId: certificate.enrollmentId,
+  }
+}

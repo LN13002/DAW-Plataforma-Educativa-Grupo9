@@ -59,13 +59,13 @@ mise trust
 
 > Esto es una medida de seguridad de mise para evitar ejecutar scripts de repositorios desconocidos.
 
-Luego instala las herramientas declaradas en `mise.toml` (Java 21):
+Luego instala las herramientas declaradas en `mise.toml` (Java 21 y Node.js LTS):
 
 ```bash
 mise install
 ```
 
-mise descargará y configurará automáticamente **Java 21 (Temurin)** sin tocar la instalación global de Java de tu sistema.
+mise descargará y configurará automáticamente **Java 21 (Temurin)** y **Node.js LTS** sin tocar las instalaciones globales de tu sistema.
 
 ---
 
@@ -75,8 +75,9 @@ Las tareas están definidas en `mise.toml` y se ejecutan con `mise run <tarea>`.
 
 | Comando | Descripción |
 |---|---|
-| `mise run dev` | Inicia todo: base de datos + backend + abre Swagger |
+| `mise run dev` | Inicia todo: base de datos + backend + frontend |
 | `mise run backend` | Solo el backend (requiere DB activa) |
+| `mise run frontend` | Solo el frontend de Vite |
 | `mise run db:up` | Levanta el contenedor de PostgreSQL |
 | `mise run db:down` | Detiene y elimina el contenedor |
 | `mise run db:logs` | Muestra los logs de PostgreSQL en tiempo real |

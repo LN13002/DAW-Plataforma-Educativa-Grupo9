@@ -1,5 +1,6 @@
 [tools]
 java = "temurin-21"
+node = "lts"
 
 [env]
 DB_HOST = "localhost"
@@ -7,11 +8,6 @@ DB_PORT = "5433"
 DB_NAME = "aprende_ues"
 DB_USER = "aprende_ues"
 DB_PASSWORD = "aprende_ues"
-
-[tasks.dev]
-description = "Start Postgres and the backend in development mode"
-depends = ["db:up"]
-run = "mise run backend"
 
 [tasks."db:up"]
 description = "Start Postgres with Docker Compose"
@@ -29,4 +25,4 @@ run = "docker compose logs -f db"
 description = "Run backend unit tests"
 run = "cd backend && ./mvnw test"
 
-# tasks "backend" and "db:migrate" are defined as file tasks in .mise/tasks/
+# tasks "dev", "backend", "frontend" and "db:migrate" are defined as file tasks in .mise/tasks/

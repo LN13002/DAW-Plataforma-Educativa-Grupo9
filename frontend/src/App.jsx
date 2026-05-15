@@ -22,6 +22,8 @@ import {
 import { api, mapCategoryDto, mapCertificateDto, mapCourseDto, mapLessonDto } from './services/api'
 import { ModulesPage } from './pages/modules/ModulesPage'
 import { CommentsPage } from './pages/comments/CommentsPage'
+import { LessonsPage } from './pages/lessons/LessonsPage'
+import { LessonProgressPage } from './pages/lesson-progress/LessonProgressPage'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true)
@@ -215,6 +217,8 @@ function App() {
   const screen = {
     modules: <ModulesPage />,
     comments: <CommentsPage />,
+    lessons: <LessonsPage />,
+    'lesson-progress': <LessonProgressPage />,
     home: (
       <HomeView
         user={appUser}

@@ -4,6 +4,8 @@ const navItems = [
   ['account_tree', 'Mi Ruta', 'player'],
   ['local_library', 'Biblioteca', 'library'],
   ['workspace_premium', 'Diplomas', 'certificates'],
+  ['view_module', 'Módulos', 'modules'],
+  ['forum', 'Comentarios', 'comments'],
   ['settings', 'Ajustes', 'profile'],
 ]
 

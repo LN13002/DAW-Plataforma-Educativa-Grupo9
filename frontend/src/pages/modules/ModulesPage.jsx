@@ -1,199 +1,59 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '../../components/Button'
 import { Icon } from '../../components/Icon'
-import { backendResources } from '../../data/mockData'
+import { api } from '../../services/api'
 
-const mockModules = backendResources.find((r) => r.key === 'modules').records
+const emptyForm = { courseId: '', title: '', description: '', position: '1', published: 'true' }
 
 export function ModulesPage() {
-  const [modules, setModules] = useState(mockModules)
-  const [formMode, setFormMode] = useState(null) // 'create' | 'edit'
+  const [rows, setRows] = useState([])
+  const [formMode, setFormMode] = useState(null)
   const [selected, setSelected] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
-  const [form, setForm] = useState({ courseTitle: '', title: '', position: '', published: 'false' })
+  const [form, setForm] = useState(emptyForm)
+  const [error, setError] = useState('')
 
-  const openCreate = () => {
-    setForm({ courseTitle: '', title: '', position: '', published: 'false' })
-    setSelected(null)
-    setFormMode('create')
+  const load = async () => {
+    try { setRows(await api.getModules()); setError('') } catch { setError('No se pudieron cargar módulos.') }
   }
 
-  const openEdit = (module) => {
-    setForm({ ...module })
-    setSelected(module)
+  useEffect(() => { load() }, [])
+
+  const openCreate = () => { setForm(emptyForm); setSelected(null); setFormMode('create') }
+  const openEdit = (row) => {
+    setForm({ courseId: row.courseId, title: row.title, description: row.description ?? '', position: String(row.position), published: String(Boolean(row.published)) })
+    setSelected(row)
     setFormMode('edit')
   }
 
-const handleSubmit = (e) => {
-  e.preventDefault()
-
-  if (formMode === 'create') {
-    const newId = `MOD-${String(modules.length + 1).padStart(3, '0')}`
-
-    const newModule = {
-      ...form,
-      id: newId
-    }
-
-    setModules([...modules, newModule])
-  } else {
-    setModules(
-      modules.map((m) =>
-        m.id === selected.id
-          ? { ...selected, ...form }
-          : m
-      )
-    )
+  const submit = async (e) => {
+    e.preventDefault()
+    const payload = { courseId: form.courseId, title: form.title, description: form.description, position: Number(form.position), published: form.published === 'true' }
+    try {
+      if (formMode === 'create') await api.createModule(payload)
+      else await api.updateModule(selected.id, payload)
+      setFormMode(null)
+      await load()
+    } catch { setError('No se pudo guardar módulo. Verifica datos.') }
   }
 
-  setFormMode(null)
-}
-
-  const confirmDelete = () => {
-    setModules(modules.filter((m) => m.id !== deleteTarget.id))
-    setDeleteTarget(null)
-  }
+  const remove = async () => { try { await api.deleteModule(deleteTarget.id); setDeleteTarget(null); await load() } catch { setError('No se pudo eliminar módulo.') } }
 
   return (
     <main className="page">
-      <section className="page-header">
-        <span className="eyebrow">/api/modules</span>
-        <h1>Módulos</h1>
-        <p>Bloques de contenido ordenados dentro de cada curso.</p>
-      </section>
-
-      {/* FORMULARIO — POST / PUT */}
-      {formMode ? (
-        <section className="admin-panel" style={{ marginBottom: '2rem' }}>
-          <div className="admin-panel-header">
-            <div>
-              <span className="eyebrow">{formMode === 'create' ? 'POST /api/modules' : 'PUT /api/modules/:id'}</span>
-              <h2>{formMode === 'create' ? 'Crear módulo' : 'Editar módulo'}</h2>
-            </div>
-          </div>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '480px' }}>
-            <label>
-              Curso
-              <input
-                value={form.courseTitle}
-                onChange={(e) => setForm({ ...form, courseTitle: e.target.value })}
-                placeholder="Nombre del curso"
-                required
-              />
-            </label>
-            <label>
-              Título del módulo
-              <input
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Ej. Fundamentos"
-                required
-              />
-            </label>
-            <label>
-              Posición
-              <input
-                type="number"
-                value={form.position}
-                onChange={(e) => setForm({ ...form, position: e.target.value })}
-                placeholder="1"
-                required
-              />
-            </label>
-            <label>
-              Publicado
-              <select value={form.published} onChange={(e) => setForm({ ...form, published: e.target.value })}>
-                <option value="true">Sí</option>
-                <option value="false">No</option>
-              </select>
-            </label>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <Button type="submit">
-                <Icon name={formMode === 'create' ? 'add' : 'save'} />
-                {formMode === 'create' ? 'Crear' : 'Guardar'}
-              </Button>
-              <Button variant="secondary" onClick={() => setFormMode(null)}>
-                Cancelar
-              </Button>
-            </div>
-          </form>
-        </section>
-      ) : null}
-
-      {/* TABLA — GET */}
-      <section className="admin-panel">
-        <div className="admin-panel-header">
-          <div>
-            <span className="eyebrow">GET /api/modules</span>
-            <h2>Listado de módulos</h2>
-          </div>
-          <Button onClick={openCreate}>
-            <Icon name="add" />
-            Crear módulo
-          </Button>
-        </div>
-
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Curso</th>
-                <th>Título</th>
-                <th>Posición</th>
-                <th>Publicado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {modules.map((module) => (
-                <tr key={module.id}>
-                  <td>{module.id}</td>
-                  <td>{module.courseTitle}</td>
-                  <td>{module.title}</td>
-                  <td>{module.position}</td>
-                  <td>
-                    <span style={{ color: module.published === 'true' ? 'var(--color-success, green)' : 'var(--color-muted, gray)' }}>
-                      {module.published === 'true' ? 'Sí' : 'No'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="row-actions">
-                      <button type="button" aria-label="Editar" onClick={() => openEdit(module)}>
-                        <Icon name="edit" />
-                      </button>
-                      <button type="button" aria-label="Eliminar" onClick={() => setDeleteTarget(module)}>
-                        <Icon name="delete" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* MODAL DELETE */}
-      {deleteTarget ? (
-        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="auth-card" style={{ maxWidth: '360px', width: '100%' }}>
-            <div className="auth-card-header">
-              <h2>Eliminar módulo</h2>
-              <p>¿Estás seguro que deseas eliminar <strong>{deleteTarget.title}</strong>? Esta acción no se puede deshacer.</p>
-            </div>
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-              <Button onClick={confirmDelete}>
-                <Icon name="delete" />
-                Eliminar
-              </Button>
-              <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-                Cancelar
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <section className="page-header"><span className="eyebrow">/api/modules</span><h1>Módulos</h1></section>
+      {error ? <div className="data-notice">{error}</div> : null}
+      {formMode ? <section className="admin-panel" style={{ marginBottom: '2rem' }}><form onSubmit={submit} style={{ display: 'grid', gap: '1rem', padding: '24px', maxWidth: '560px' }}>
+        <input className="form-input" placeholder="Course UUID" value={form.courseId} onChange={(e)=>setForm((p)=>({...p,courseId:e.target.value}))} required />
+        <input className="form-input" placeholder="Título" value={form.title} onChange={(e)=>setForm((p)=>({...p,title:e.target.value}))} required />
+        <input className="form-input" placeholder="Descripción" value={form.description} onChange={(e)=>setForm((p)=>({...p,description:e.target.value}))} />
+        <input className="form-input" type="number" min="1" value={form.position} onChange={(e)=>setForm((p)=>({...p,position:e.target.value}))} required />
+        <select className="form-input" value={form.published} onChange={(e)=>setForm((p)=>({...p,published:e.target.value}))}><option value="true">Publicado</option><option value="false">Borrador</option></select>
+        <div style={{ display:'flex', gap:'0.75rem' }}><Button type="submit"><Icon name="save" />Guardar</Button><Button variant="secondary" type="button" onClick={()=>setFormMode(null)}>Cancelar</Button></div>
+      </form></section> : null}
+      <section className="admin-panel"><div className="admin-panel-header"><h2>Listado</h2><Button onClick={openCreate}><Icon name="add" />Nuevo</Button></div>
+      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Curso</th><th>Título</th><th>Posición</th><th>Publicado</th><th>Acciones</th></tr></thead><tbody>{rows.map((r)=><tr key={r.id}><td>{r.id}</td><td>{r.courseTitle}</td><td>{r.title}</td><td>{r.position}</td><td>{String(r.published)}</td><td><div className="row-actions"><button type="button" onClick={()=>openEdit(r)}><Icon name="edit" /></button><button type="button" onClick={()=>setDeleteTarget(r)}><Icon name="delete" /></button></div></td></tr>)}</tbody></table></div></section>
+      {deleteTarget ? <div className="modal-overlay" style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}><div className="auth-card"><h2>Eliminar módulo</h2><div style={{ display:'flex', gap:'0.75rem' }}><Button onClick={remove}>Eliminar</Button><Button variant="secondary" onClick={()=>setDeleteTarget(null)}>Cancelar</Button></div></div></div> : null}
     </main>
   )
 }

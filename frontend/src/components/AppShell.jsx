@@ -6,6 +6,7 @@ const navItems = [
   ['workspace_premium', 'Diplomas', 'certificates'],
   ['view_module', 'Módulos', 'modules'],
   ['forum', 'Comentarios', 'comments'],
+  ['how_to_reg', 'Inscripciones', 'enrollments'],
   ['play_lesson', 'Lecciones', 'lessons'],
   ['track_changes', 'Progreso', 'lesson-progress'],
   ['settings', 'Ajustes', 'profile'],

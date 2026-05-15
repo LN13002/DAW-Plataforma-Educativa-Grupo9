@@ -2,6 +2,8 @@ import { Icon } from './Icon'
 import { ProgressBar } from './ProgressBar'
 
 export function CourseCard({ course, compact = false, onOpen, actionLabel = 'Ver curso' }) {
+  if (!course) return null
+
   return (
     <article className={compact ? 'course-card compact' : 'course-card'}>
       <div className="course-cover">

@@ -25,6 +25,10 @@ import { CommentsPage } from './pages/comments/CommentsPage'
 import { LessonsPage } from './pages/lessons/LessonsPage'
 import { LessonProgressPage } from './pages/lesson-progress/LessonProgressPage'
 
+// --- INTEGRACIÓN DE TUS NUEVOS MÓDULOS ---
+import { UsersPage } from './pages/users/UsersPage'
+import { CategoriesPage } from './pages/categories/CategoriesPage'
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true)
   const [authView, setAuthView] = useState('login')
@@ -67,7 +71,7 @@ function App() {
 
         if (!mounted) return
 
-        const student = usersDto.find((user) => user.role === 'student') ?? usersDto[0]
+        const student = usersDto.find((user) => user.role === 'student' || user.role === 'STUDENT') ?? usersDto[0]
         if (student) {
           setAppUser({
             id: student.id,
@@ -139,7 +143,7 @@ function App() {
         })
         setCompletedMessage('Leccion marcada como completada en el backend.')
       } catch {
-        setCompletedMessage('No se pudo actualizar el progreso en la API. Revisa que el backend este activo.')
+        setCompletedMessage('No se pudo actualizar el progreso en la API.')
       }
     } else {
       setCompletedMessage('Leccion marcada localmente. Inscribete al curso para guardar progreso real.')
@@ -160,7 +164,7 @@ function App() {
           email: formData.get('email'),
           password: formData.get('password'),
           avatarUrl: '',
-          role: formData.get('role'),
+          role: formData.get('role').toUpperCase(),
         })
         setAppUser({
           id: createdUser.id,
@@ -215,10 +219,6 @@ function App() {
   }
 
   const screen = {
-    modules: <ModulesPage />,
-    comments: <CommentsPage />,
-    lessons: <LessonsPage />,
-    'lesson-progress': <LessonProgressPage />,
     home: (
       <HomeView
         user={appUser}
@@ -229,8 +229,6 @@ function App() {
         onOpenPlayer={openPlayer}
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
-        
-        
       />
     ),
     explore: (
@@ -263,14 +261,24 @@ function App() {
     ),
     library: <LibraryView courses={appCourses.filter((course) => course.progress > 0)} onOpenPlayer={openPlayer} />,
     certificates: <CertificatesView certificates={appCertificates} />,
+    profile: <ProfileView user={appUser} courses={appCourses} certificates={appCertificates} />,
+    
+    // --- TUS VISTAS REALES INTEGRADAS ---
+    users: <UsersPage />,
+    categories: <CategoriesPage />,
+    modules: <ModulesPage />,
+    comments: <CommentsPage />,
+    lessons: <LessonsPage />,
+    'lesson-progress': <LessonProgressPage />,
+    
     admin: (
       <BackendPanelView
         resources={backendResources}
         activeResourceKey={activeResourceKey}
         setActiveResourceKey={setActiveResourceKey}
+        onNavigate={setView}
       />
     ),
-    profile: <ProfileView user={appUser} courses={appCourses} certificates={appCertificates} />,
   }[view]
 
   return (
@@ -714,7 +722,7 @@ function ProfileView({ user, courses, certificates }) {
   )
 }
 
-function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey }) {
+function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey, onNavigate }) {
   const activeResource = resources.find((resource) => resource.key === activeResourceKey) ?? resources[0]
 
   return (
@@ -734,7 +742,12 @@ function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey }
             className={resource.key === activeResource.key ? 'backend-resource-card active' : 'backend-resource-card'}
             type="button"
             key={resource.key}
-            onClick={() => setActiveResourceKey(resource.key)}
+            onClick={() => {
+              setActiveResourceKey(resource.key);
+              if(resource.key === 'users' || resource.key === 'categories') {
+                 onNavigate(resource.key);
+              }
+            }}
           >
             <Icon name={resource.icon} />
             <strong>{resource.title}</strong>
@@ -750,9 +763,9 @@ function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey }
             <h2>{activeResource.title}</h2>
             <p>{activeResource.description}</p>
           </div>
-          <Button>
-            <Icon name="add" />
-            Crear
+          <Button onClick={() => onNavigate(activeResource.key)}>
+            <Icon name="open_in_new" />
+            Abrir Gestion Real
           </Button>
         </div>
 
@@ -846,4 +859,4 @@ function InfoPanel({ title, children }) {
   )
 }
 
-export default App
+export default App;

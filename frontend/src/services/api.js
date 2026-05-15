@@ -19,14 +19,41 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  // --- MÓDULO DE USUARIOS ---
   getUsers: () => request('/api/users'),
   createUser: (payload) =>
     request('/api/users', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  updateUser: (id, payload) =>
+    request(`/api/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  deleteUser: (id) =>
+    request(`/api/users/${id}`, {
+      method: 'DELETE',
+    }),
 
+  // --- MÓDULO DE CATEGORÍAS ---
   getCategories: () => request('/api/categories'),
+  createCategory: (payload) =>
+    request('/api/categories', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateCategory: (id, payload) =>
+    request(`/api/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  deleteCategory: (id) =>
+    request(`/api/categories/${id}`, {
+      method: 'DELETE',
+    }),
+
+  // --- RESTO DE RECURSOS ---
   getCourses: () => request('/api/courses'),
   getModules: () => request('/api/modules'),
   getLessons: () => request('/api/lessons'),
@@ -68,7 +95,6 @@ function levelLabel(level) {
 
 export function mapCourseDto(course, index = 0, enrollments = []) {
   const enrollment = enrollments.find((item) => item.courseId === course.id)
-
   return {
     id: course.id,
     title: course.title,
@@ -90,13 +116,19 @@ export function mapCourseDto(course, index = 0, enrollments = []) {
   }
 }
 
+// CORRECCIÓN IMPORTANTE: Ahora devuelve un objeto con ID para poder editar/borrar
 export function mapCategoryDto(category) {
-  return category.name
+  return {
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+    description: category.description,
+    parentId: category.parent?.id || null
+  }
 }
 
 export function mapLessonDto(lesson, activeLessonId) {
   const minutes = Math.max(1, Math.round((lesson.durationSeconds ?? 0) / 60))
-
   return {
     id: lesson.id,
     moduleId: lesson.moduleId,

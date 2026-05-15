@@ -20,6 +20,8 @@ import {
   reviews,
 } from './data/mockData'
 import { api, mapCategoryDto, mapCertificateDto, mapCourseDto, mapLessonDto } from './services/api'
+import { ModulesPage } from './pages/modules/ModulesPage'
+import { CommentsPage } from './pages/comments/CommentsPage'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true)
@@ -211,6 +213,8 @@ function App() {
   }
 
   const screen = {
+    modules: <ModulesPage />,
+    comments: <CommentsPage />,
     home: (
       <HomeView
         user={appUser}
@@ -221,6 +225,8 @@ function App() {
         onOpenPlayer={openPlayer}
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
+        
+        
       />
     ),
     explore: (

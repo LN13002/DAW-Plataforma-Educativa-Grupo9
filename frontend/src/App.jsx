@@ -50,18 +50,48 @@ const DEDICATED_RESOURCE_VIEWS = new Set([
   'lessons',
   'lesson-progress',
 ])
+const ADMIN_ONLY_VIEWS = new Set(['users', 'categories', 'modules', 'comments', 'enrollments', 'lessons', 'lesson-progress', 'admin'])
+
+function normalizeRole(role) {
+  return String(role ?? '').toLowerCase()
+}
+
+function roleLabel(role) {
+  const labels = {
+    admin: 'Admin',
+    instructor: 'Instructor',
+    student: 'User',
+  }
+  return labels[normalizeRole(role)] ?? role ?? 'User'
+}
+
+function toAppUser(user) {
+  if (!user) return DEFAULT_USER
+  return {
+    id: user.id,
+    name: `${user.firstName} ${user.lastName}`,
+    initials: `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase(),
+    faculty: 'Usuario registrado en UES Virtual',
+    email: user.email,
+    plan: normalizeRole(user.role),
+    streak: 0,
+  }
+}
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true)
   const [authView, setAuthView] = useState('login')
   const [view, setView] = useState('home')
   const [appUser, setAppUser] = useState(DEFAULT_USER)
+  const [appUsers, setAppUsers] = useState([])
   const [appCourses, setAppCourses] = useState([])
   const [appCategories, setAppCategories] = useState(['Todos'])
   const [appLessons, setAppLessons] = useState([])
   const [appCertificates, setAppCertificates] = useState([])
   const [appModules, setAppModules] = useState([])
   const [appEnrollments, setAppEnrollments] = useState([])
+  const [backendCourses, setBackendCourses] = useState([])
+  const [backendCertificates, setBackendCertificates] = useState([])
   const [appReviews, setAppReviews] = useState([])
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [activeCategory, setActiveCategory] = useState('Todos')
@@ -97,23 +127,20 @@ function App() {
 
         if (!mounted) return
 
-        const student = usersDto.find((user) => user.role === 'student' || user.role === 'STUDENT') ?? usersDto[0]
-        if (student) {
-          setAppUser({
-            id: student.id,
-            name: `${student.firstName} ${student.lastName}`,
-            initials: `${student.firstName?.[0] ?? ''}${student.lastName?.[0] ?? ''}`.toUpperCase(),
-            faculty: 'Usuario registrado en UES Virtual',
-            email: student.email,
-            plan: student.role,
-            streak: 0,
-          })
-        }
-
-        const mappedCourses = coursesDto.map((course, index) => mapCourseDto(course, index, enrollmentsDto))
+        const student = usersDto.find((user) => normalizeRole(user.role) === 'student') ?? usersDto[0]
+        const currentUserEnrollments = student ? enrollmentsDto.filter((enrollment) => enrollment.userId === student.id) : []
+        const currentEnrollmentIds = new Set(currentUserEnrollments.map((enrollment) => enrollment.id))
+        const mappedCourses = coursesDto.map((course, index) => mapCourseDto(course, index, currentUserEnrollments))
         const mappedCategories = categoriesDto.map(mapCategoryDto)
         const mappedLessons = lessonsDto.map((lesson) => mapLessonDto(lesson))
-        const mappedCertificates = certificatesDto.map(mapCertificateDto)
+        const mappedCertificates = certificatesDto
+          .filter((certificate) => currentEnrollmentIds.has(certificate.enrollmentId))
+          .map(mapCertificateDto)
+
+        setAppUsers(usersDto)
+        setBackendCourses(coursesDto)
+        setBackendCertificates(certificatesDto)
+        if (student) setAppUser(toAppUser(student))
 
         if (mappedCourses.length > 0) {
           setAppCourses(mappedCourses)
@@ -148,6 +175,47 @@ function App() {
       mounted = false
     }
   }, [])
+
+  const personaOptions = useMemo(() => {
+    const seenRoles = new Set()
+    return appUsers
+      .filter((user) => {
+        const role = normalizeRole(user.role)
+        if (!role || seenRoles.has(role)) return false
+        seenRoles.add(role)
+        return true
+      })
+      .map((user) => ({
+        id: user.id,
+        role: normalizeRole(user.role),
+        roleLabel: roleLabel(user.role),
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        initials: `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase(),
+      }))
+  }, [appUsers])
+
+  const switchPersona = (userId) => {
+    const user = appUsers.find((item) => item.id === userId)
+    if (!user) return
+    const role = normalizeRole(user.role)
+
+    const userEnrollments = appEnrollments.filter((enrollment) => enrollment.userId === user.id)
+    const enrollmentIds = new Set(userEnrollments.map((enrollment) => enrollment.id))
+    const nextCourses = backendCourses.map((course, index) => mapCourseDto(course, index, userEnrollments))
+    const nextCertificates = backendCertificates
+      .filter((certificate) => enrollmentIds.has(certificate.enrollmentId))
+      .map(mapCertificateDto)
+
+    setAppUser(toAppUser(user))
+    setAppCourses(nextCourses)
+    setAppCertificates(nextCertificates)
+    setSelectedCourse((current) => nextCourses.find((course) => course.id === current?.id) ?? nextCourses[0] ?? null)
+    if (role === 'admin' && view === 'progress') setView('home')
+    if (role !== 'admin' && ADMIN_ONLY_VIEWS.has(view)) setView('home')
+    setCompletedMessage(`Viendo como ${roleLabel(user.role)}: ${user.firstName} ${user.lastName}`)
+    window.setTimeout(() => setCompletedMessage(''), 2500)
+  }
 
   const filteredCourses = useMemo(() => {
     if (activeCategory === 'Todos') return appCourses
@@ -238,15 +306,8 @@ function App() {
           avatarUrl: '',
           role: formData.get('role').toUpperCase(),
         })
-        setAppUser({
-          id: createdUser.id,
-          name: `${createdUser.firstName} ${createdUser.lastName}`,
-          initials: `${createdUser.firstName?.[0] ?? ''}${createdUser.lastName?.[0] ?? ''}`.toUpperCase(),
-          faculty: 'Usuario registrado en UES Virtual',
-          email: createdUser.email,
-          plan: createdUser.role,
-          streak: 0,
-        })
+        setAppUsers((current) => [...current, createdUser])
+        setAppUser(toAppUser(createdUser))
       } catch {
         setDataNotice('No se pudo crear la cuenta en la API. Entrando en modo demo.')
       }
@@ -256,15 +317,8 @@ function App() {
         const email = formData.get('email')
         const foundUser = users.find((user) => user.email === email) ?? users[0]
         if (foundUser) {
-          setAppUser({
-            id: foundUser.id,
-            name: `${foundUser.firstName} ${foundUser.lastName}`,
-            initials: `${foundUser.firstName?.[0] ?? ''}${foundUser.lastName?.[0] ?? ''}`.toUpperCase(),
-            faculty: 'Usuario registrado en UES Virtual',
-            email: foundUser.email,
-            plan: foundUser.role,
-            streak: 0,
-          })
+          setAppUsers(users)
+          setAppUser(toAppUser(foundUser))
         }
       } catch {
         setDataNotice('No se pudo autenticar contra la API.')
@@ -290,7 +344,8 @@ function App() {
     )
   }
 
-  const screen = {
+  const isAdminView = appUser.plan === 'admin'
+  const screenByView = {
     modules: <ModulesPage />,
     comments: <CommentsPage />,
     enrollments: <EnrollmentsPage />,
@@ -304,8 +359,12 @@ function App() {
         courses={appCourses}
         categories={appCategories}
         certificates={appCertificates}
+        modules={appModules}
+        lessons={appLessons}
+        enrollments={appEnrollments}
         onOpenCourse={openCourse}
         onOpenPlayer={openPlayer}
+        onNavigate={setView}
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
       />
@@ -317,6 +376,7 @@ function App() {
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
         onOpenCourse={openCourse}
+        user={appUser}
       />
     ),
     course: (
@@ -328,6 +388,9 @@ function App() {
         onBack={() => setView('explore')}
         onStart={() => openPlayer(selectedCourse)}
         onEnroll={handleEnrollCourse}
+        onNavigate={setView}
+        user={appUser}
+        completedMessage={completedMessage}
       />
     ),
     player: (
@@ -341,6 +404,7 @@ function App() {
       />
     ),
     library: <LibraryView courses={appCourses.filter((course) => course.progress > 0)} onOpenPlayer={openPlayer} />,
+    progress: <UserProgressView user={appUser} courses={appCourses} certificates={appCertificates} onOpenPlayer={openPlayer} />,
     certificates: <CertificatesView certificates={appCertificates} />,
     profile: <ProfileView user={appUser} courses={appCourses} certificates={appCertificates} />,
     admin: (
@@ -351,10 +415,21 @@ function App() {
         onNavigate={setView}
       />
     ),
-  }[view]
+  }
+
+  const screen = ADMIN_ONLY_VIEWS.has(view) && !isAdminView
+    ? <RoleAccessView role={appUser.plan} onNavigate={setView} />
+    : screenByView[view] ?? screenByView.home
 
   return (
-    <AppShell user={appUser} activeView={view} onNavigate={setView} onLogout={handleLogout}>
+    <AppShell
+      user={appUser}
+      personas={personaOptions}
+      activeView={view}
+      onNavigate={setView}
+      onLogout={handleLogout}
+      onPersonaSwitch={switchPersona}
+    >
       {dataNotice ? <div className="data-notice">{dataNotice}</div> : null}
       {screen}
     </AppShell>
@@ -457,7 +532,98 @@ function AuthView({ mode, onModeChange, onSubmit }) {
   )
 }
 
-function HomeView({ user, courses, categories, certificates, onOpenCourse, onOpenPlayer, activeCategory, setActiveCategory }) {
+function RoleAccessView({ role, onNavigate }) {
+  return (
+    <main className="page role-access-page">
+      <section className="admin-panel role-access-card">
+        <Icon name="admin_panel_settings" />
+        <span className="eyebrow">Vista restringida</span>
+        <h1>Este módulo es solo para Admin</h1>
+        <p>
+          Estás viendo como {roleLabel(role)}. Cambia a una persona Admin desde el menú de usuario o vuelve a tu espacio de aprendizaje.
+        </p>
+        <div className="enrollment-form-actions">
+          <Button onClick={() => onNavigate('home')}>
+            <Icon name="home" />
+            Ir a inicio
+          </Button>
+          <Button variant="secondary" onClick={() => onNavigate('progress')}>
+            <Icon name="track_changes" />
+            Ver mi progreso
+          </Button>
+        </div>
+      </section>
+    </main>
+  )
+}
+
+function HomeView({
+  user,
+  courses,
+  categories,
+  certificates,
+  modules,
+  lessons,
+  enrollments,
+  onOpenCourse,
+  onOpenPlayer,
+  onNavigate,
+  activeCategory,
+  setActiveCategory,
+}) {
+  if (user.plan === 'admin') {
+    return (
+      <RoleHomeView
+        user={user}
+        title="Panel de operación"
+        description="Supervisa el contenido, las inscripciones y la actividad académica de la plataforma."
+        stats={[
+          ['school', courses.length, 'Cursos'],
+          ['view_module', modules.length, 'Módulos'],
+          ['play_lesson', lessons.length, 'Lecciones'],
+          ['how_to_reg', enrollments.length, 'Inscripciones'],
+        ]}
+        actions={[
+          ['Módulos', 'Organiza la estructura de cada curso.', 'view_module', 'modules'],
+          ['Lecciones', 'Revisa contenido, duración y publicación.', 'play_lesson', 'lessons'],
+          ['Inscripciones', 'Acompaña el estado de cada estudiante.', 'how_to_reg', 'enrollments'],
+          ['Comentarios', 'Media conversaciones de la comunidad.', 'forum', 'comments'],
+        ]}
+        courses={courses}
+        onOpenCourse={onOpenCourse}
+        onNavigate={onNavigate}
+      />
+    )
+  }
+
+  if (user.plan === 'instructor') {
+    const instructorCourses = courses.filter((course) => course.instructorId === user.id)
+    const visibleCourses = instructorCourses.length > 0 ? instructorCourses : courses
+
+    return (
+      <RoleHomeView
+        user={user}
+        title="Panel docente"
+        description="Revisa tus cursos, módulos y lecciones publicadas para mantener el aprendizaje al día."
+        stats={[
+          ['school', visibleCourses.length, 'Cursos asignados'],
+          ['view_module', modules.filter((module) => visibleCourses.some((course) => course.id === module.courseId)).length, 'Módulos'],
+          ['play_lesson', lessons.filter((lesson) => modules.some((module) => module.id === lesson.moduleId && visibleCourses.some((course) => course.id === module.courseId))).length, 'Lecciones'],
+          ['workspace_premium', certificates.length, 'Certificados'],
+        ]}
+        actions={[
+          ['Ver cursos', 'Abre el catálogo docente y revisa contenido.', 'school', 'explore'],
+          ['Progreso', 'Consulta tu avance como usuario activo.', 'track_changes', 'progress'],
+          ['Diplomas', 'Revisa certificados emitidos a esta persona.', 'workspace_premium', 'certificates'],
+          ['Ajustes', 'Actualiza la información visible del perfil.', 'settings', 'profile'],
+        ]}
+        courses={visibleCourses}
+        onOpenCourse={onOpenCourse}
+        onNavigate={onNavigate}
+      />
+    )
+  }
+
   const currentCourse = courses[0]
 
   return (
@@ -512,30 +678,95 @@ function HomeView({ user, courses, categories, certificates, onOpenCourse, onOpe
   )
 }
 
-function ExploreView({ courses, categories, activeCategory, setActiveCategory, onOpenCourse }) {
+function RoleHomeView({ user, title, description, stats, actions, courses, onOpenCourse, onNavigate }) {
+  return (
+    <main className="page role-home-page">
+      <section className="page-header">
+        <span className="eyebrow">Inicio · {roleLabel(user.plan)}</span>
+        <h1>{title}</h1>
+        <p>{description}</p>
+      </section>
+
+      <section className="role-home-summary">
+        {stats.map(([icon, value, label]) => (
+          <article key={label}>
+            <Icon name={icon} />
+            <strong>{value}</strong>
+            <span>{label}</span>
+          </article>
+        ))}
+      </section>
+
+      <section className="role-action-grid">
+        {actions.map(([title, text, icon, target]) => (
+          <button type="button" key={title} onClick={() => onNavigate(target)}>
+            <Icon name={icon} />
+            <strong>{title}</strong>
+            <span>{text}</span>
+          </button>
+        ))}
+      </section>
+
+      <section className="section-block role-course-panel">
+        <div className="section-heading">
+          <h2>{user.plan === 'admin' ? 'Cursos en plataforma' : 'Cursos para revisar'}</h2>
+          <button className="link-button" type="button" onClick={() => onNavigate('explore')}>
+            Ver cursos
+          </button>
+        </div>
+        <div className="role-course-list">
+          {courses.slice(0, 6).map((course) => (
+            <article key={course.id}>
+              <div>
+                <span>{course.category}</span>
+                <h3>{course.title}</h3>
+                <p>{course.instructor}</p>
+              </div>
+              <button type="button" onClick={() => onOpenCourse(course)}>
+                <Icon name="visibility" />
+                Revisar
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
+  )
+}
+
+function ExploreView({ courses, categories, activeCategory, setActiveCategory, onOpenCourse, user }) {
+  const isStaff = user?.plan === 'admin' || user?.plan === 'instructor'
+
   return (
     <main className="page">
       <section className="page-header">
-        <span className="eyebrow">Catalogo</span>
-        <h1>Explora cursos de AprendeUes</h1>
-        <p>Filtra por facultad o area y abre el detalle para revisar contenido, instructor y recursos.</p>
+        <span className="eyebrow">{isStaff ? `Cursos · ${roleLabel(user.plan)}` : 'Catalogo'}</span>
+        <h1>{isStaff ? 'Vista de cursos' : 'Explora cursos de AprendeUes'}</h1>
+        <p>
+          {isStaff
+            ? 'Revisa cursos desde una mirada de gestión: contenido, instructor, módulos y estado general.'
+            : 'Filtra por facultad o area y abre el detalle para revisar contenido, instructor y recursos.'}
+        </p>
       </section>
 
-      <section className="section-block">
-        <CategoryPills categories={categories} activeCategory={activeCategory} onSelect={setActiveCategory} />
-      </section>
+      {!isStaff ? (
+        <section className="section-block">
+          <CategoryPills categories={categories} activeCategory={activeCategory} onSelect={setActiveCategory} />
+        </section>
+      ) : null}
 
       <section className="catalog-grid">
         {courses.map((course) => (
-          <CourseCard compact course={course} key={course.id} onOpen={onOpenCourse} />
+          <CourseCard compact course={course} key={course.id} onOpen={onOpenCourse} actionLabel={isStaff ? 'Revisar curso' : undefined} />
         ))}
       </section>
     </main>
   )
 }
 
-function CourseDetailView({ course, modules, lessons, reviews, onBack, onStart, onEnroll }) {
+function CourseDetailView({ course, modules, lessons, reviews, onBack, onStart, onEnroll, onNavigate, user, completedMessage }) {
   if (!course) return null
+  const isStaff = user?.plan === 'admin' || user?.plan === 'instructor'
   const courseModules = modules.filter((module) => !module.courseId || module.courseId === course.id)
 
   return (
@@ -568,6 +799,8 @@ function CourseDetailView({ course, modules, lessons, reviews, onBack, onStart, 
 
       <section className="course-detail-grid">
         <div className="content-stack">
+          {completedMessage ? <div className="data-notice">{completedMessage}</div> : null}
+
           <InfoPanel title="Lo que aprenderas">
             <div className="learn-grid">
               {[
@@ -638,15 +871,44 @@ function CourseDetailView({ course, modules, lessons, reviews, onBack, onStart, 
         </div>
 
         <aside className="enroll-card">
-          <strong>{COURSE_PRICE_LABEL}</strong>
-          <Button onClick={() => (course.progress > 0 || course.enrollmentId ? onStart() : onEnroll(course))}>
-            <Icon name={course.progress > 0 ? 'play_circle' : 'school'} />
-            {course.progress > 0 ? 'Continuar curso' : 'Inscribirme'}
-          </Button>
-          <Button variant="secondary">
-            <Icon name="shopping_cart" />
-            Agregar a biblioteca
-          </Button>
+          {user?.plan === 'admin' ? (
+            <>
+              <strong>Gestión</strong>
+              <p className="enroll-card-note">Vista de revisión para {roleLabel(user.plan)}. Aquí no se inscribe al curso.</p>
+              <Button onClick={() => onNavigate('modules')}>
+                <Icon name="view_module" />
+                Gestionar módulos
+              </Button>
+              <Button variant="secondary" onClick={() => onNavigate('lessons')}>
+                <Icon name="play_lesson" />
+                Gestionar lecciones
+              </Button>
+            </>
+          ) : user?.plan === 'instructor' ? (
+            <>
+              <strong>Docencia</strong>
+              <p className="enroll-card-note">Vista docente para revisar el contenido publicado sin inscribirte como estudiante.</p>
+              <Button onClick={onBack}>
+                <Icon name="school" />
+                Ver cursos
+              </Button>
+              <Button variant="secondary" onClick={() => onNavigate('profile')}>
+                <Icon name="person" />
+                Ver perfil
+              </Button>
+            </>
+          ) : (
+            <>
+              <strong>{COURSE_PRICE_LABEL}</strong>
+              <p className="enroll-card-note">
+                {course.enrollmentId ? 'Ya estás inscrito en este curso.' : 'Inscripción inmediata con tu usuario activo.'}
+              </p>
+              <Button onClick={() => (course.progress > 0 || course.enrollmentId ? onStart() : onEnroll(course))}>
+                <Icon name={course.progress > 0 || course.enrollmentId ? 'play_circle' : 'how_to_reg'} />
+                {course.progress > 0 || course.enrollmentId ? 'Continuar curso' : 'Inscribirme gratis'}
+              </Button>
+            </>
+          )}
           <ul>
             <li>Video bajo demanda</li>
             <li>Recursos descargables</li>
@@ -726,13 +988,96 @@ function LibraryView({ courses, onOpenPlayer }) {
   )
 }
 
+function UserProgressView({ user, courses, certificates, onOpenPlayer }) {
+  const enrolledCourses = courses.filter((course) => course.enrollmentId || course.progress > 0)
+  const averageProgress = enrolledCourses.length
+    ? Math.round(enrolledCourses.reduce((total, course) => total + Number(course.progress ?? 0), 0) / enrolledCourses.length)
+    : 0
+  const completedCourses = enrolledCourses.filter((course) => Number(course.progress ?? 0) >= 100).length
+  const nextCourse = enrolledCourses
+    .filter((course) => Number(course.progress ?? 0) < 100)
+    .sort((a, b) => Number(b.progress ?? 0) - Number(a.progress ?? 0))[0]
+
+  return (
+    <main className="page user-progress-page">
+      <section className="page-header">
+        <span className="eyebrow">Mi avance</span>
+        <h1>Progreso de aprendizaje</h1>
+        <p>{user.name}, aquí puedes revisar cómo vas en tus cursos inscritos y qué puedes continuar ahora.</p>
+      </section>
+
+      <section className="user-progress-summary">
+        <article>
+          <Icon name="school" />
+          <strong>{enrolledCourses.length}</strong>
+          <span>Cursos inscritos</span>
+        </article>
+        <article>
+          <Icon name="track_changes" />
+          <strong>{averageProgress}%</strong>
+          <span>Avance promedio</span>
+        </article>
+        <article>
+          <Icon name="workspace_premium" />
+          <strong>{certificates.length}</strong>
+          <span>Certificados</span>
+        </article>
+        <article>
+          <Icon name="task_alt" />
+          <strong>{completedCourses}</strong>
+          <span>Cursos completados</span>
+        </article>
+      </section>
+
+      {nextCourse ? (
+        <section className="admin-panel progress-continue-panel">
+          <div>
+            <span className="eyebrow">Siguiente paso</span>
+            <h2>Continúa {nextCourse.title}</h2>
+            <p>Vas al {Math.round(nextCourse.progress)}%. Retoma el curso para acercarte al certificado.</p>
+          </div>
+          <Button onClick={() => onOpenPlayer(nextCourse)}>
+            <Icon name="play_arrow" />
+            Continuar
+          </Button>
+        </section>
+      ) : null}
+
+      <section className="user-progress-list">
+        {enrolledCourses.length === 0 ? (
+          <div className="comment-empty-state">Aún no tienes cursos inscritos. Explora cursos para comenzar tu ruta.</div>
+        ) : (
+          enrolledCourses.map((course) => (
+            <article className="user-progress-card" key={course.id}>
+              <img src={course.image} alt="" />
+              <div>
+                <span>{course.category}</span>
+                <h2>{course.title}</h2>
+                <p>{course.instructor}</p>
+                <ProgressBar value={course.progress} label="Progreso del curso" />
+              </div>
+              <div className="user-progress-actions">
+                <strong>{Math.round(course.progress)}%</strong>
+                <Button variant={course.progress >= 100 ? 'secondary' : 'primary'} onClick={() => onOpenPlayer(course)}>
+                  <Icon name={course.progress >= 100 ? 'visibility' : 'play_arrow'} />
+                  {course.progress >= 100 ? 'Revisar' : 'Continuar'}
+                </Button>
+              </div>
+            </article>
+          ))
+        )}
+      </section>
+    </main>
+  )
+}
+
 function CertificatesView({ certificates }) {
   return (
     <main className="page">
       <section className="page-header">
         <span className="eyebrow">Diplomas</span>
         <h1>Certificados recientes</h1>
-        <p>Documentos listos para descargar cuando el backend habilite archivos reales.</p>
+        <p>Documentos emitidos por inscripciones completadas y listos para descargar desde el backend.</p>
       </section>
 
       <section className="certificate-grid">
@@ -740,12 +1085,13 @@ function CertificatesView({ certificates }) {
           <article className="certificate-card" key={certificate.id}>
             <Icon name="verified_user" />
             <h2>{certificate.title}</h2>
+            {certificate.studentName ? <p>Otorgado a {certificate.studentName}</p> : null}
             <p>Expedido el {certificate.issuedAt}</p>
-            <span>ID: {certificate.id}</span>
-            <Button variant="secondary">
+            <span>Código: {certificate.code ?? certificate.id}</span>
+            <a className="btn btn-secondary certificate-download" href={certificate.downloadUrl} download>
               <Icon name="download" />
               Descargar
-            </Button>
+            </a>
           </article>
         ))}
       </section>

@@ -88,6 +88,11 @@ export const api = {
   getEnrollments: () => request('/api/enrollments'),
   getEnrollmentsByUser: (userId) => request(`/api/enrollments/user/${userId}`),
   getCertificates: () => request('/api/certificates'),
+  createCertificate: (payload) =>
+    request('/api/certificates', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   getReviews: () => request('/api/reviews'),
   getComments: () => request('/api/comments'),
   createComment: (payload) =>
@@ -203,10 +208,14 @@ export function mapLessonDto(lesson, activeLessonId) {
 
 export function mapCertificateDto(certificate) {
   return {
-    id: certificate.code ?? certificate.id,
-    title: `Certificado ${certificate.code ?? ''}`.trim(),
+    id: certificate.id,
+    code: certificate.code,
+    title: certificate.courseTitle ? `Certificado de ${certificate.courseTitle}` : `Certificado ${certificate.code ?? ''}`.trim(),
+    studentName: certificate.studentName,
+    courseTitle: certificate.courseTitle,
     issuedAt: certificate.issuedAt ? new Date(certificate.issuedAt).toLocaleDateString('es-SV') : 'Pendiente',
     pdfUrl: certificate.pdfUrl,
+    downloadUrl: `/api/certificates/${certificate.id}/download`,
     enrollmentId: certificate.enrollmentId,
   }
 }

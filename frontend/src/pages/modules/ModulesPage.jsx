@@ -1,59 +1,365 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '../../components/Button'
 import { Icon } from '../../components/Icon'
 import { api } from '../../services/api'
 
-const emptyForm = { courseId: '', title: '', description: '', position: '1', published: 'true' }
+const emptyForm = {
+  courseId: '',
+  title: '',
+  description: '',
+  position: '1',
+  published: 'true',
+}
+
+function publishedLabel(value) {
+  return value ? 'Publicado' : 'Borrador'
+}
+
+function getCourseTitle(course) {
+  return course?.title ?? 'Curso sin identificar'
+}
 
 export function ModulesPage() {
-  const [rows, setRows] = useState([])
+  const [modules, setModules] = useState([])
+  const [courses, setCourses] = useState([])
   const [formMode, setFormMode] = useState(null)
   const [selected, setSelected] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [courseFilter, setCourseFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
 
-  const load = async () => {
-    try { setRows(await api.getModules()); setError('') } catch { setError('No se pudieron cargar módulos.') }
+  const coursesById = useMemo(() => new Map(courses.map((course) => [course.id, course])), [courses])
+  const selectedCourse = form.courseId ? coursesById.get(form.courseId) : null
+
+  const field = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))
+
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      const [modulesDto, coursesDto] = await Promise.all([api.getModules(), api.getCourses()])
+      setModules(modulesDto)
+      setCourses(coursesDto)
+      setError('')
+    } catch {
+      setError('No se pudieron cargar los módulos desde la API.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    loadData()
+  }, [])
 
-  const openCreate = () => { setForm(emptyForm); setSelected(null); setFormMode('create') }
-  const openEdit = (row) => {
-    setForm({ courseId: row.courseId, title: row.title, description: row.description ?? '', position: String(row.position), published: String(Boolean(row.published)) })
-    setSelected(row)
+  const closeForm = () => {
+    setFormMode(null)
+    setSelected(null)
+    setForm(emptyForm)
+  }
+
+  const openCreate = () => {
+    setSelected(null)
+    setForm({
+      ...emptyForm,
+      courseId: courses[0]?.id ?? '',
+      position: String(Math.max(1, modules.length + 1)),
+    })
+    setFormMode('create')
+  }
+
+  const openEdit = (module) => {
+    setSelected(module)
+    setForm({
+      courseId: module.courseId,
+      title: module.title,
+      description: module.description ?? '',
+      position: String(module.position),
+      published: String(Boolean(module.published)),
+    })
     setFormMode('edit')
   }
 
-  const submit = async (e) => {
-    e.preventDefault()
-    const payload = { courseId: form.courseId, title: form.title, description: form.description, position: Number(form.position), published: form.published === 'true' }
+  const submit = async (event) => {
+    event.preventDefault()
+    const payload = {
+      courseId: form.courseId,
+      title: form.title,
+      description: form.description,
+      position: Number(form.position),
+      published: form.published === 'true',
+    }
+
     try {
       if (formMode === 'create') await api.createModule(payload)
       else await api.updateModule(selected.id, payload)
-      setFormMode(null)
-      await load()
-    } catch { setError('No se pudo guardar módulo. Verifica datos.') }
+      closeForm()
+      await loadData()
+    } catch {
+      setError('No se pudo guardar el módulo. Verifica el curso, título y posición.')
+    }
   }
 
-  const remove = async () => { try { await api.deleteModule(deleteTarget.id); setDeleteTarget(null); await load() } catch { setError('No se pudo eliminar módulo.') } }
+  const remove = async () => {
+    try {
+      await api.deleteModule(deleteTarget.id)
+      setDeleteTarget(null)
+      await loadData()
+    } catch {
+      setError('No se pudo eliminar el módulo. Revisa si tiene lecciones asociadas.')
+    }
+  }
+
+  const filteredModules = useMemo(() => {
+    const query = search.trim().toLowerCase()
+
+    return modules
+      .filter((module) => {
+        const courseTitle = module.courseTitle ?? getCourseTitle(coursesById.get(module.courseId))
+        const matchesCourse = courseFilter === 'all' || module.courseId === courseFilter
+        const matchesStatus =
+          statusFilter === 'all' ||
+          (statusFilter === 'published' && module.published) ||
+          (statusFilter === 'draft' && !module.published)
+        const matchesSearch =
+          !query ||
+          module.title.toLowerCase().includes(query) ||
+          (module.description ?? '').toLowerCase().includes(query) ||
+          courseTitle.toLowerCase().includes(query)
+
+        return matchesCourse && matchesStatus && matchesSearch
+      })
+      .sort((a, b) => {
+        const courseCompare = (a.courseTitle ?? '').localeCompare(b.courseTitle ?? '')
+        if (courseCompare !== 0) return courseCompare
+        return Number(a.position ?? 0) - Number(b.position ?? 0)
+      })
+  }, [courseFilter, coursesById, modules, search, statusFilter])
+
+  const stats = useMemo(() => {
+    const published = modules.filter((module) => module.published).length
+    const drafts = modules.length - published
+    const courseCount = new Set(modules.map((module) => module.courseId)).size
+    return { published, drafts, courseCount }
+  }, [modules])
 
   return (
-    <main className="page">
-      <section className="page-header"><span className="eyebrow">/api/modules</span><h1>Módulos</h1></section>
+    <main className="page modules-admin-page">
+      <section className="page-header">
+        <span className="eyebrow">Arquitectura de cursos</span>
+        <h1>Módulos</h1>
+        <p>Organiza cada curso en bloques claros, ordenados y listos para que el estudiante avance sin perderse.</p>
+      </section>
+
       {error ? <div className="data-notice">{error}</div> : null}
-      {formMode ? <section className="admin-panel" style={{ marginBottom: '2rem' }}><form onSubmit={submit} style={{ display: 'grid', gap: '1rem', padding: '24px', maxWidth: '560px' }}>
-        <input className="form-input" placeholder="Course UUID" value={form.courseId} onChange={(e)=>setForm((p)=>({...p,courseId:e.target.value}))} required />
-        <input className="form-input" placeholder="Título" value={form.title} onChange={(e)=>setForm((p)=>({...p,title:e.target.value}))} required />
-        <input className="form-input" placeholder="Descripción" value={form.description} onChange={(e)=>setForm((p)=>({...p,description:e.target.value}))} />
-        <input className="form-input" type="number" min="1" value={form.position} onChange={(e)=>setForm((p)=>({...p,position:e.target.value}))} required />
-        <select className="form-input" value={form.published} onChange={(e)=>setForm((p)=>({...p,published:e.target.value}))}><option value="true">Publicado</option><option value="false">Borrador</option></select>
-        <div style={{ display:'flex', gap:'0.75rem' }}><Button type="submit"><Icon name="save" />Guardar</Button><Button variant="secondary" type="button" onClick={()=>setFormMode(null)}>Cancelar</Button></div>
-      </form></section> : null}
-      <section className="admin-panel"><div className="admin-panel-header"><h2>Listado</h2><Button onClick={openCreate}><Icon name="add" />Nuevo</Button></div>
-      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Curso</th><th>Título</th><th>Posición</th><th>Publicado</th><th>Acciones</th></tr></thead><tbody>{rows.map((r)=><tr key={r.id}><td>{r.id}</td><td>{r.courseTitle}</td><td>{r.title}</td><td>{r.position}</td><td>{String(r.published)}</td><td><div className="row-actions"><button type="button" onClick={()=>openEdit(r)}><Icon name="edit" /></button><button type="button" onClick={()=>setDeleteTarget(r)}><Icon name="delete" /></button></div></td></tr>)}</tbody></table></div></section>
-      {deleteTarget ? <div className="modal-overlay" style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}><div className="auth-card"><h2>Eliminar módulo</h2><div style={{ display:'flex', gap:'0.75rem' }}><Button onClick={remove}>Eliminar</Button><Button variant="secondary" onClick={()=>setDeleteTarget(null)}>Cancelar</Button></div></div></div> : null}
+
+      <section className="module-summary-grid">
+        <article className="module-summary-card">
+          <Icon name="view_module" />
+          <div>
+            <strong>{modules.length}</strong>
+            <span>Módulos</span>
+          </div>
+        </article>
+        <article className="module-summary-card">
+          <Icon name="school" />
+          <div>
+            <strong>{stats.courseCount}</strong>
+            <span>Cursos con módulos</span>
+          </div>
+        </article>
+        <article className="module-summary-card">
+          <Icon name="visibility" />
+          <div>
+            <strong>{stats.published}</strong>
+            <span>Publicados</span>
+          </div>
+        </article>
+        <article className="module-summary-card">
+          <Icon name="edit_note" />
+          <div>
+            <strong>{stats.drafts}</strong>
+            <span>Borradores</span>
+          </div>
+        </article>
+      </section>
+
+      {formMode ? (
+        <section className="admin-panel module-editor-panel">
+          <div className="admin-panel-header">
+            <div>
+              <span className="eyebrow">{formMode === 'create' ? 'Nuevo bloque de aprendizaje' : 'Editar bloque de aprendizaje'}</span>
+              <h2>{formMode === 'create' ? 'Crear módulo' : 'Actualizar módulo'}</h2>
+              <p>Define a qué curso pertenece, qué aprenderá el estudiante y en qué orden debe aparecer.</p>
+            </div>
+          </div>
+
+          <form className="module-editor-form" onSubmit={submit}>
+            <label className="form-label">
+              Curso
+              <select className="form-input" value={form.courseId} onChange={field('courseId')} required>
+                <option value="">Selecciona un curso</option>
+                {courses.map((course) => (
+                  <option value={course.id} key={course.id}>
+                    {course.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="form-label">
+              Estado
+              <select className="form-input" value={form.published} onChange={field('published')}>
+                <option value="true">Publicado</option>
+                <option value="false">Borrador</option>
+              </select>
+            </label>
+
+            <label className="form-label">
+              Título del módulo
+              <input className="form-input" value={form.title} onChange={field('title')} placeholder="Ej. Fundamentos de JavaScript" required />
+            </label>
+
+            <label className="form-label">
+              Posición
+              <input className="form-input" type="number" min="1" value={form.position} onChange={field('position')} required />
+            </label>
+
+            <label className="form-label module-field-wide">
+              Descripción para orientar al estudiante
+              <textarea
+                className="form-input module-textarea"
+                value={form.description}
+                onChange={field('description')}
+                placeholder="Resume qué se logrará en este bloque y por qué es importante dentro del curso."
+              />
+            </label>
+
+            <div className="module-preview-card">
+              <Icon name="route" />
+              <div>
+                <strong>{form.title || 'Nombre del módulo'}</strong>
+                <span>
+                  {getCourseTitle(selectedCourse)} · Módulo {form.position || '1'} · {publishedLabel(form.published === 'true')}
+                </span>
+              </div>
+            </div>
+
+            <div className="enrollment-form-actions">
+              <Button type="submit">
+                <Icon name="save" />
+                Guardar módulo
+              </Button>
+              <Button variant="secondary" type="button" onClick={closeForm}>
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </section>
+      ) : null}
+
+      <section className="admin-panel">
+        <div className="admin-panel-header module-list-header">
+          <div>
+            <span className="eyebrow">Mapa de contenidos</span>
+            <h2>Módulos por curso</h2>
+            <p>Revisa el orden, estado y propósito de cada bloque antes de publicar nuevas lecciones.</p>
+          </div>
+          <Button onClick={openCreate}>
+            <Icon name="add" />
+            Nuevo módulo
+          </Button>
+        </div>
+
+        <div className="module-toolbar">
+          <label className="search admin-search">
+            <Icon name="search" />
+            <input
+              placeholder="Buscar por curso, módulo o descripción"
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+
+          <select className="form-input module-course-filter" value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}>
+            <option value="all">Todos los cursos</option>
+            {courses.map((course) => (
+              <option value={course.id} key={course.id}>
+                {course.title}
+              </option>
+            ))}
+          </select>
+
+          <div className="enrollment-filter-group" aria-label="Filtrar módulos por estado">
+            {[
+              ['all', 'Todos'],
+              ['published', 'Publicados'],
+              ['draft', 'Borradores'],
+            ].map(([value, label]) => (
+              <button className={statusFilter === value ? 'active' : ''} type="button" key={value} onClick={() => setStatusFilter(value)}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="module-card-list">
+          {loading ? (
+            <div className="comment-empty-state">Cargando módulos...</div>
+          ) : filteredModules.length === 0 ? (
+            <div className="comment-empty-state">No hay módulos con esos filtros.</div>
+          ) : (
+            filteredModules.map((module) => (
+              <article className="module-admin-card" key={module.id}>
+                <div className="module-position-pill">Módulo {module.position}</div>
+                <div className="module-admin-main">
+                  <span>{module.courseTitle ?? getCourseTitle(coursesById.get(module.courseId))}</span>
+                  <h3>{module.title}</h3>
+                  <p>{module.description || 'Sin descripción todavía.'}</p>
+                </div>
+                <div className="module-admin-meta">
+                  <span className={module.published ? 'status-badge status-active' : 'status-badge status-cancelled'}>
+                    {publishedLabel(module.published)}
+                  </span>
+                  <div className="row-actions">
+                    <button type="button" onClick={() => openEdit(module)} aria-label={`Editar ${module.title}`}>
+                      <Icon name="edit" />
+                    </button>
+                    <button type="button" onClick={() => setDeleteTarget(module)} aria-label={`Eliminar ${module.title}`}>
+                      <Icon name="delete" />
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
+      {deleteTarget ? (
+        <div className="modal-overlay">
+          <div className="auth-card module-delete-card">
+            <div className="auth-card-header">
+              <span className="eyebrow">Eliminar módulo</span>
+              <h2>{deleteTarget.title}</h2>
+              <p>Se eliminará este bloque del curso {deleteTarget.courseTitle}. Verifica que no tenga lecciones que quieras conservar.</p>
+            </div>
+            <div className="enrollment-form-actions">
+              <Button onClick={remove}>
+                <Icon name="delete" />
+                Eliminar
+              </Button>
+              <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }

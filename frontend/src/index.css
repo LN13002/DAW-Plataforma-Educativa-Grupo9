@@ -352,6 +352,85 @@ h3,
   overflow-wrap: anywhere;
 }
 
+.account-summary small {
+  display: inline-flex;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 4px 8px;
+}
+
+.persona-switcher {
+  display: grid;
+  gap: 6px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 8px 4px 10px;
+}
+
+.persona-switcher > span {
+  color: var(--color-muted-2);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding-inline: 6px;
+  text-transform: uppercase;
+}
+
+.persona-switcher button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 9px 8px;
+  text-align: left;
+}
+
+.persona-switcher button:hover,
+.persona-switcher button.active {
+  border-color: var(--color-border);
+  background: var(--color-surface-muted);
+  color: var(--color-primary);
+}
+
+.avatar.mini {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+
+.persona-switcher strong,
+.persona-switcher small {
+  display: block;
+}
+
+.persona-switcher strong {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.persona-switcher small {
+  margin-top: 2px;
+  color: var(--color-muted-2);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.persona-switcher .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 20px;
+}
+
 .account-popover > button {
   display: flex;
   align-items: center;
@@ -1180,6 +1259,12 @@ h3,
   font-size: 42px;
 }
 
+.enroll-card-note {
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .enroll-card ul {
   margin: 12px 0 0;
   padding-left: 18px;
@@ -1309,6 +1394,296 @@ h3,
 .certificate-card p,
 .certificate-card span {
   color: var(--color-muted);
+}
+
+.certificate-download {
+  margin-top: 8px;
+  text-decoration: none;
+}
+
+.user-progress-page {
+  display: grid;
+  gap: 24px;
+}
+
+.user-progress-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.user-progress-summary article {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.user-progress-summary .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 30px;
+}
+
+.user-progress-summary strong {
+  color: var(--color-primary);
+  font-family: Lexend, Inter, sans-serif;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.user-progress-summary span {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.progress-continue-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 24px;
+}
+
+.progress-continue-panel h2 {
+  color: var(--color-primary);
+  font-size: 26px;
+}
+
+.progress-continue-panel p {
+  margin-top: 6px;
+  color: var(--color-muted);
+}
+
+.user-progress-list {
+  display: grid;
+  gap: 14px;
+}
+
+.user-progress-card {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.user-progress-card img {
+  width: 100%;
+  height: 112px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.user-progress-card span,
+.user-progress-card h2,
+.user-progress-card p {
+  display: block;
+}
+
+.user-progress-card span {
+  color: var(--color-muted-2);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.user-progress-card h2 {
+  margin-top: 4px;
+  color: var(--color-primary);
+  font-size: 22px;
+}
+
+.user-progress-card p {
+  margin: 4px 0 12px;
+  color: var(--color-muted);
+}
+
+.user-progress-actions {
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+}
+
+.user-progress-actions strong {
+  color: var(--color-primary);
+  font-family: Lexend, Inter, sans-serif;
+  font-size: 28px;
+}
+
+.role-access-page {
+  display: grid;
+  min-height: calc(100vh - 110px);
+  place-items: center;
+}
+
+.role-access-card {
+  display: grid;
+  width: min(100%, 560px);
+  justify-items: start;
+  gap: 12px;
+  padding: 32px;
+}
+
+.role-access-card > .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 42px;
+}
+
+.role-access-card h1 {
+  color: var(--color-primary);
+  font-size: 34px;
+}
+
+.role-access-card p {
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.role-home-page {
+  display: grid;
+  gap: 24px;
+}
+
+.role-home-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.role-home-summary article {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.role-home-summary .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 30px;
+}
+
+.role-home-summary strong {
+  color: var(--color-primary);
+  font-family: Lexend, Inter, sans-serif;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.role-home-summary span {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.role-action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.role-action-grid button {
+  display: grid;
+  min-height: 150px;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 18px;
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+}
+
+.role-action-grid button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.role-action-grid .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 30px;
+}
+
+.role-action-grid strong {
+  color: var(--color-primary);
+  font-size: 18px;
+}
+
+.role-action-grid span {
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.role-course-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.role-course-list {
+  display: grid;
+  gap: 12px;
+}
+
+.role-course-list article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: white;
+  padding: 16px;
+}
+
+.role-course-list article span {
+  color: var(--color-muted-2);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.role-course-list article h3 {
+  margin-top: 4px;
+  color: var(--color-primary);
+  font-size: 20px;
+}
+
+.role-course-list article p {
+  margin-top: 4px;
+  color: var(--color-muted);
+}
+
+.role-course-list article button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-weight: 900;
+  padding: 10px 12px;
+}
+
+.role-course-list article button:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 
 .profile-hero {
@@ -1547,6 +1922,1092 @@ h3,
 .endpoint-map span {
   color: var(--color-muted);
   overflow-wrap: anywhere;
+}
+
+.enrollments-page {
+  display: grid;
+  gap: 24px;
+}
+
+.enrollment-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.enrollment-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.enrollment-summary-card > .material-symbols-outlined {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 28px;
+}
+
+.enrollment-summary-card strong,
+.enrollment-summary-card span {
+  display: block;
+}
+
+.enrollment-summary-card strong {
+  color: var(--color-primary);
+  font-family: Lexend, Inter, sans-serif;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.enrollment-summary-card span {
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.enrollment-form-panel {
+  margin-bottom: 0;
+}
+
+.enrollment-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px;
+}
+
+.enrollment-form .form-label:nth-child(3),
+.enrollment-preview,
+.enrollment-form-actions {
+  grid-column: 1 / -1;
+}
+
+.enrollment-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  padding: 14px;
+}
+
+.enrollment-preview > .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 28px;
+}
+
+.enrollment-preview strong,
+.enrollment-preview span {
+  display: block;
+}
+
+.enrollment-preview strong {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.enrollment-preview span {
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.enrollment-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.enrollment-list-header {
+  align-items: center;
+}
+
+.enrollment-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 18px 24px;
+}
+
+.enrollment-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.enrollment-filter-group button {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-weight: 900;
+  padding: 10px 12px;
+}
+
+.enrollment-filter-group button:hover,
+.enrollment-filter-group button.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.enrollment-table {
+  min-width: 980px;
+}
+
+.enrollment-table td:first-child {
+  color: var(--color-muted);
+}
+
+.enrollment-table td:first-child strong,
+.enrollment-table td:first-child span {
+  display: block;
+}
+
+.enrollment-table td:first-child strong {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.enrollment-table td:first-child span {
+  margin-top: 4px;
+  color: var(--color-muted-2);
+  font-size: 12px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+}
+
+.status-active {
+  background: #eef8f1;
+  color: #176b36;
+}
+
+.status-completed {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.status-cancelled {
+  background: #f1f2f4;
+  color: var(--color-muted);
+}
+
+.enrollment-progress-cell {
+  display: grid;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.enrollment-progress-cell > span {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.mini-progress-track {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: #e9eaec;
+}
+
+.mini-progress-track > div {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 50%);
+  padding: 16px;
+}
+
+.enrollment-delete-card {
+  width: min(100%, 420px);
+}
+
+.lessons-admin-page {
+  display: grid;
+  gap: 24px;
+}
+
+.lesson-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.lesson-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.lesson-summary-card > .material-symbols-outlined {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 28px;
+}
+
+.lesson-summary-card strong,
+.lesson-summary-card span {
+  display: block;
+}
+
+.lesson-summary-card strong {
+  color: var(--color-primary);
+  font-family: Lexend, Inter, sans-serif;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.lesson-summary-card span {
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.lesson-editor-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px;
+}
+
+.lesson-field-wide,
+.lesson-preview-card,
+.lesson-editor-form .enrollment-form-actions {
+  grid-column: 1 / -1;
+}
+
+.lesson-textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.lesson-inline-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.lesson-inline-field span {
+  color: var(--color-muted);
+  font-weight: 800;
+}
+
+.lesson-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  padding: 14px;
+}
+
+.lesson-preview-card > .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 28px;
+}
+
+.lesson-preview-card strong,
+.lesson-preview-card span {
+  display: block;
+}
+
+.lesson-preview-card strong {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.lesson-preview-card span {
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.lesson-list-header {
+  align-items: center;
+}
+
+.lesson-toolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 420px) minmax(260px, 1fr);
+  gap: 14px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 18px 24px;
+}
+
+.lesson-toolbar .search {
+  max-width: none;
+}
+
+.lesson-module-filter {
+  width: 100%;
+}
+
+.lesson-admin-table {
+  min-width: 1080px;
+}
+
+.lesson-admin-table td:first-child,
+.lesson-admin-table td:nth-child(2) {
+  color: var(--color-muted);
+}
+
+.lesson-admin-table td:first-child strong,
+.lesson-admin-table td:first-child span,
+.lesson-admin-table td:nth-child(2) strong,
+.lesson-admin-table td:nth-child(2) span {
+  display: block;
+}
+
+.lesson-admin-table td:first-child strong,
+.lesson-admin-table td:nth-child(2) strong {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.lesson-admin-table td:first-child span,
+.lesson-admin-table td:nth-child(2) span {
+  max-width: 520px;
+  margin-top: 4px;
+  color: var(--color-muted-2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.lesson-status-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lesson-type-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #f1f2f4;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+}
+
+.lesson-delete-card {
+  width: min(100%, 440px);
+}
+
+.lesson-progress-page {
+  display: grid;
+  gap: 24px;
+}
+
+.progress-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.progress-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.progress-summary-card > .material-symbols-outlined {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 28px;
+}
+
+.progress-summary-card strong,
+.progress-summary-card span {
+  display: block;
+}
+
+.progress-summary-card strong {
+  color: var(--color-primary);
+  font-family: Lexend, Inter, sans-serif;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.progress-summary-card span {
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.progress-editor-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px;
+}
+
+.progress-field-wide,
+.progress-preview-card,
+.progress-editor-form .enrollment-form-actions {
+  grid-column: 1 / -1;
+}
+
+.progress-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  padding: 14px;
+}
+
+.progress-preview-card > .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 28px;
+}
+
+.progress-preview-card strong,
+.progress-preview-card span {
+  display: block;
+}
+
+.progress-preview-card strong {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.progress-preview-card span {
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.progress-list-header {
+  align-items: center;
+}
+
+.progress-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 18px 24px;
+}
+
+.progress-toolbar .search {
+  max-width: 420px;
+}
+
+.lesson-progress-table {
+  min-width: 1080px;
+}
+
+.lesson-progress-table td:first-child,
+.lesson-progress-table td:nth-child(2) {
+  color: var(--color-muted);
+}
+
+.lesson-progress-table td:first-child strong,
+.lesson-progress-table td:first-child span,
+.lesson-progress-table td:nth-child(2) strong,
+.lesson-progress-table td:nth-child(2) span {
+  display: block;
+}
+
+.lesson-progress-table td:first-child strong,
+.lesson-progress-table td:nth-child(2) strong {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.lesson-progress-table td:first-child span,
+.lesson-progress-table td:nth-child(2) span {
+  margin-top: 4px;
+  color: var(--color-muted-2);
+  font-size: 12px;
+}
+
+.progress-cell-stack {
+  display: grid;
+  gap: 8px;
+  min-width: 150px;
+}
+
+.progress-cell-stack small {
+  color: var(--color-muted-2);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.progress-delete-card {
+  width: min(100%, 440px);
+}
+
+.comments-moderation-page {
+  display: grid;
+  gap: 24px;
+}
+
+.comment-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.comment-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.comment-summary-card > .material-symbols-outlined {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 28px;
+}
+
+.comment-summary-card strong,
+.comment-summary-card span {
+  display: block;
+}
+
+.comment-summary-card strong {
+  color: var(--color-primary);
+  font-family: Lexend, Inter, sans-serif;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.comment-summary-card span {
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.comment-mediation-panel {
+  overflow: hidden;
+}
+
+.comment-mediation-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px;
+}
+
+.comment-field-wide,
+.comment-original-box,
+.comment-context-card,
+.comment-mediation-form .enrollment-form-actions {
+  grid-column: 1 / -1;
+}
+
+.comment-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.comment-original-box {
+  display: grid;
+  gap: 8px;
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  padding: 14px 16px;
+}
+
+.comment-original-box span {
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.comment-original-box p {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.comment-context-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  padding: 14px;
+}
+
+.comment-context-card > .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 28px;
+}
+
+.comment-context-card strong,
+.comment-context-card span {
+  display: block;
+}
+
+.comment-context-card strong {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.comment-context-card span {
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.comment-list-header {
+  align-items: center;
+}
+
+.comment-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.comment-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 18px 24px;
+}
+
+.comment-toolbar .search {
+  max-width: 460px;
+}
+
+.comment-list {
+  display: grid;
+  gap: 14px;
+  padding: 18px 24px 24px;
+}
+
+.comment-empty-state {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  color: var(--color-muted);
+  font-weight: 800;
+  padding: 26px;
+  text-align: center;
+}
+
+.comment-card {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  padding: 18px;
+}
+
+.comment-card.is-reply {
+  border-left: 4px solid var(--color-primary);
+}
+
+.comment-card-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.comment-card-header strong,
+.comment-card-header span {
+  display: block;
+}
+
+.comment-card-header strong {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.comment-card-header span {
+  margin-top: 2px;
+  color: var(--color-muted-2);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.comment-avatar {
+  background: var(--color-primary);
+  color: white;
+}
+
+.comment-role-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #f1f2f4;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+}
+
+.comment-role-badge.admin {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.comment-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.comment-context > .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 20px;
+}
+
+.comment-parent {
+  margin: 0;
+  border-left: 3px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.55;
+  padding-left: 12px;
+}
+
+.comment-body {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.comment-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+}
+
+.comment-card-footer > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.comment-card-footer .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.comment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.comment-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-weight: 900;
+  padding: 9px 11px;
+}
+
+.comment-actions button:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.comment-actions .danger {
+  color: #9f1d1d;
+}
+
+.comment-actions .danger:hover {
+  border-color: #9f1d1d;
+  background: #fff1f1;
+}
+
+.comment-delete-card {
+  width: min(100%, 460px);
+}
+
+.modules-admin-page {
+  display: grid;
+  gap: 24px;
+}
+
+.module-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.module-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.module-summary-card > .material-symbols-outlined {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 28px;
+}
+
+.module-summary-card strong,
+.module-summary-card span {
+  display: block;
+}
+
+.module-summary-card strong {
+  color: var(--color-primary);
+  font-family: Lexend, Inter, sans-serif;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.module-summary-card span {
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.module-editor-panel {
+  overflow: hidden;
+}
+
+.module-editor-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px;
+}
+
+.module-field-wide,
+.module-preview-card,
+.module-editor-form .enrollment-form-actions {
+  grid-column: 1 / -1;
+}
+
+.module-textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.module-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  padding: 14px;
+}
+
+.module-preview-card > .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 28px;
+}
+
+.module-preview-card strong,
+.module-preview-card span {
+  display: block;
+}
+
+.module-preview-card strong {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.module-preview-card span {
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.module-list-header {
+  align-items: center;
+}
+
+.module-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) minmax(260px, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 18px 24px;
+}
+
+.module-toolbar .search {
+  max-width: none;
+}
+
+.module-course-filter {
+  width: 100%;
+}
+
+.module-card-list {
+  display: grid;
+  gap: 12px;
+  padding: 18px 24px 24px;
+}
+
+.module-admin-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: white;
+  padding: 16px;
+}
+
+.module-position-pill {
+  display: grid;
+  min-width: 92px;
+  min-height: 70px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-family: Lexend, Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.module-admin-main {
+  min-width: 0;
+}
+
+.module-admin-main span,
+.module-admin-main h3,
+.module-admin-main p {
+  display: block;
+}
+
+.module-admin-main span {
+  color: var(--color-muted-2);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.module-admin-main h3 {
+  margin-top: 4px;
+  color: var(--color-primary);
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.module-admin-main p {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  line-height: 1.55;
+}
+
+.module-admin-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.module-delete-card {
+  width: min(100%, 460px);
 }
 
 .lesson-panel {
@@ -1836,7 +3297,12 @@ h3,
   .endpoint-map > div,
   .settings-grid,
   .learn-grid,
-  .resource-grid {
+  .resource-grid,
+  .user-progress-summary,
+  .user-progress-card,
+  .role-home-summary,
+  .role-action-grid,
+  .role-course-list article {
     grid-template-columns: 1fr;
   }
 
@@ -1879,13 +3345,88 @@ h3,
   }
 
   .admin-panel-header,
+  .progress-continue-panel,
   .admin-actions {
     align-items: stretch;
     flex-direction: column;
   }
 
+  .enrollment-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lesson-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .progress-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .comment-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .module-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .enrollment-form {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-editor-form,
+  .progress-editor-form,
+  .comment-mediation-form,
+  .module-editor-form,
+  .module-toolbar,
+  .lesson-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .enrollment-toolbar,
+  .progress-toolbar,
+  .comment-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .comment-header-actions {
+    justify-content: flex-start;
+  }
+
+  .module-admin-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .module-position-pill {
+    min-height: auto;
+    justify-content: start;
+    padding: 12px;
+  }
+
+  .module-admin-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .enrollment-toolbar .search,
+  .progress-toolbar .search,
+  .comment-toolbar .search {
+    max-width: none;
+  }
+
   .library-item img {
     height: 190px;
+  }
+
+  .user-progress-card img {
+    height: 170px;
+  }
+
+  .user-progress-actions {
+    justify-items: start;
   }
 
   .mobile-nav {
@@ -1993,6 +3534,29 @@ h3,
 @media (max-width: 560px) {
   .auth-page {
     background: white;
+  }
+
+  .comment-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .module-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comment-card-header,
+  .comment-card-footer {
+    align-items: flex-start;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .comment-role-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .comment-card-footer {
+    display: grid;
   }
 
   .auth-visual {

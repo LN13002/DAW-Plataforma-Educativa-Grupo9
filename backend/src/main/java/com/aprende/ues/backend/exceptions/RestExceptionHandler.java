@@ -27,6 +27,12 @@ public class RestExceptionHandler {
         return ResponseEntity.badRequest().body(error);
     }
 
+    @ExceptionHandler(CertificateEligibilityException.class)
+    public ResponseEntity<ErrorDTO> handleException(CertificateEligibilityException e) {
+        ErrorDTO error = new ErrorDTO("certificate-not-eligible", e.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
     // ENROLLMENT
     @ExceptionHandler(EnrollmentNotFoundException.class)
     public ResponseEntity<ErrorDTO> handleException(EnrollmentNotFoundException e) {

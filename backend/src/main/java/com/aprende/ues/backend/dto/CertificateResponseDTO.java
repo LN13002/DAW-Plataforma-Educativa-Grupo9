@@ -7,6 +7,8 @@ public record CertificateResponseDTO(
 
         UUID id,
         UUID enrollmentId,
+        String studentName,
+        String courseTitle,
         String code,
         String pdfUrl,
         OffsetDateTime issuedAt

@@ -7,7 +7,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +35,21 @@ public class CertificateController {
     @Operation(summary = "Get certificate by ID", description = "Returns a single certificate by its UUID")
     public ResponseEntity<CertificateResponseDTO> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(certificateService.getById(id));
+    }
+
+    @GetMapping("/{id}/download")
+    @Operation(summary = "Download certificate", description = "Returns a printable HTML certificate document")
+    public ResponseEntity<byte[]> download(@PathVariable UUID id) {
+        CertificateResponseDTO certificate = certificateService.getById(id);
+        byte[] document = certificateService.generateDocument(id);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_HTML)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(certificate.code() + ".html")
+                        .build()
+                        .toString())
+                .body(document);
     }
 
     @PostMapping

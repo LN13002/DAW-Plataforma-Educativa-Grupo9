@@ -1,26 +1,49 @@
-const navItems = [
+const learnerNavItems = [
   ['home', 'Inicio', 'home'],
   ['explore', 'Explorar', 'explore'],
   ['account_tree', 'Mi Ruta', 'player'],
   ['local_library', 'Biblioteca', 'library'],
   ['workspace_premium', 'Diplomas', 'certificates'],
+  ['track_changes', 'Progreso', 'progress'],
+  ['settings', 'Ajustes', 'profile'],
+]
+
+const adminNavItems = [
+  ['home', 'Inicio', 'home'],
   ['view_module', 'Módulos', 'modules'],
   ['forum', 'Comentarios', 'comments'],
   ['how_to_reg', 'Inscripciones', 'enrollments'],
   ['play_lesson', 'Lecciones', 'lessons'],
-  ['track_changes', 'Progreso', 'lesson-progress'],
   ['settings', 'Ajustes', 'profile'],
 ]
 
 import { useState } from 'react'
 import { Icon } from './Icon'
 
-export function AppShell({ user, activeView, onNavigate, onLogout, children }) {
+export function AppShell({ user, personas = [], activeView, onNavigate, onLogout, onPersonaSwitch, children }) {
   const [accountOpen, setAccountOpen] = useState(false)
+  const isAdmin = user.plan === 'admin'
+  const navItems = isAdmin ? adminNavItems : learnerNavItems
+  const topbarItems = isAdmin
+    ? [
+        ['Panel', 'modules'],
+        ['Inscripciones', 'enrollments'],
+        ['Lecciones', 'lessons'],
+      ]
+    : [
+        ['Mis Cursos', 'library'],
+        ['Explorar', 'explore'],
+        ['Comunidad', 'profile'],
+      ]
 
   const handleNavigate = (view) => {
     setAccountOpen(false)
     onNavigate(view)
+  }
+
+  const handlePersonaSwitch = (personaId) => {
+    setAccountOpen(false)
+    onPersonaSwitch?.(personaId)
   }
 
   return (
@@ -62,15 +85,11 @@ export function AppShell({ user, activeView, onNavigate, onLogout, children }) {
           </label>
 
           <nav className="topbar-nav" aria-label="Secciones">
-            <button type="button" onClick={() => handleNavigate('library')}>
-              Mis Cursos
-            </button>
-            <button type="button" onClick={() => handleNavigate('explore')}>
-              Explorar
-            </button>
-            <button type="button" onClick={() => handleNavigate('profile')}>
-              Comunidad
-            </button>
+            {topbarItems.map(([label, target]) => (
+              <button type="button" key={target} onClick={() => handleNavigate(target)}>
+                {label}
+              </button>
+            ))}
           </nav>
 
           <div className="topbar-actions">
@@ -98,8 +117,29 @@ export function AppShell({ user, activeView, onNavigate, onLogout, children }) {
                     <div>
                       <strong>{user.name}</strong>
                       <span>{user.email}</span>
+                      <small>Vista actual: {user.plan === 'admin' ? 'Admin' : user.plan === 'instructor' ? 'Instructor' : 'User'}</small>
                     </div>
                   </div>
+                  {personas.length > 0 ? (
+                    <div className="persona-switcher">
+                      <span>Ver como</span>
+                      {personas.map((persona) => (
+                        <button
+                          className={persona.id === user.id ? 'active' : ''}
+                          type="button"
+                          key={persona.id}
+                          onClick={() => handlePersonaSwitch(persona.id)}
+                        >
+                          <div className="avatar mini">{persona.initials}</div>
+                          <div>
+                            <strong>{persona.roleLabel}</strong>
+                            <small>{persona.name}</small>
+                          </div>
+                          {persona.id === user.id ? <Icon name="check" /> : null}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                   <button type="button" onClick={() => handleNavigate('profile')}>
                     <Icon name="person" />
                     Ver perfil

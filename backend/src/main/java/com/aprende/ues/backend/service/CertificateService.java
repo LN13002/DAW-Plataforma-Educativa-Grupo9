@@ -14,6 +14,6 @@ public interface CertificateService {
     CertificateResponseDTO create(CertificateRequestDTO requestDTO);
     CertificateResponseDTO update(UUID id, CertificateRequestDTO requestDTO);
     void delete(UUID id);
+    byte[] generateDocument(UUID id);
 
 }
-

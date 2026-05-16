@@ -19,7 +19,7 @@ function getCourseTitle(course) {
   return course?.title ?? 'Curso sin identificar'
 }
 
-export function ModulesPage() {
+export function ModulesPage({ allowedCourseIds = null }) {
   const [modules, setModules] = useState([])
   const [courses, setCourses] = useState([])
   const [formMode, setFormMode] = useState(null)
@@ -34,6 +34,12 @@ export function ModulesPage() {
 
   const coursesById = useMemo(() => new Map(courses.map((course) => [course.id, course])), [courses])
   const selectedCourse = form.courseId ? coursesById.get(form.courseId) : null
+
+  // Si hay allowedCourseIds, solo mostrar esos cursos (vista instructor)
+  const visibleCourses = useMemo(
+    () => (allowedCourseIds ? courses.filter((course) => allowedCourseIds.has(course.id)) : courses),
+    [allowedCourseIds, courses]
+  )
 
   const field = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))
 
@@ -65,7 +71,7 @@ export function ModulesPage() {
     setSelected(null)
     setForm({
       ...emptyForm,
-      courseId: courses[0]?.id ?? '',
+      courseId: visibleCourses[0]?.id ?? '',
       position: String(Math.max(1, modules.length + 1)),
     })
     setFormMode('create')
@@ -118,6 +124,7 @@ export function ModulesPage() {
 
     return modules
       .filter((module) => {
+        if (allowedCourseIds && !allowedCourseIds.has(module.courseId)) return false
         const courseTitle = module.courseTitle ?? getCourseTitle(coursesById.get(module.courseId))
         const matchesCourse = courseFilter === 'all' || module.courseId === courseFilter
         const matchesStatus =
@@ -137,14 +144,15 @@ export function ModulesPage() {
         if (courseCompare !== 0) return courseCompare
         return Number(a.position ?? 0) - Number(b.position ?? 0)
       })
-  }, [courseFilter, coursesById, modules, search, statusFilter])
+  }, [allowedCourseIds, courseFilter, coursesById, modules, search, statusFilter])
 
   const stats = useMemo(() => {
-    const published = modules.filter((module) => module.published).length
-    const drafts = modules.length - published
-    const courseCount = new Set(modules.map((module) => module.courseId)).size
-    return { published, drafts, courseCount }
-  }, [modules])
+    const visible = allowedCourseIds ? modules.filter((m) => allowedCourseIds.has(m.courseId)) : modules
+    const published = visible.filter((module) => module.published).length
+    const drafts = visible.length - published
+    const courseCount = new Set(visible.map((module) => module.courseId)).size
+    return { total: visible.length, published, drafts, courseCount }
+  }, [allowedCourseIds, modules])
 
   return (
     <main className="page modules-admin-page">
@@ -160,7 +168,7 @@ export function ModulesPage() {
         <article className="module-summary-card">
           <Icon name="view_module" />
           <div>
-            <strong>{modules.length}</strong>
+            <strong>{stats.total}</strong>
             <span>Módulos</span>
           </div>
         </article>
@@ -202,7 +210,7 @@ export function ModulesPage() {
               Curso
               <select className="form-input" value={form.courseId} onChange={field('courseId')} required>
                 <option value="">Selecciona un curso</option>
-                {courses.map((course) => (
+                {visibleCourses.map((course) => (
                   <option value={course.id} key={course.id}>
                     {course.title}
                   </option>
@@ -287,7 +295,7 @@ export function ModulesPage() {
 
           <select className="form-input module-course-filter" value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}>
             <option value="all">Todos los cursos</option>
-            {courses.map((course) => (
+            {visibleCourses.map((course) => (
               <option value={course.id} key={course.id}>
                 {course.title}
               </option>

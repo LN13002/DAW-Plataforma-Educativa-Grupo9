@@ -32,7 +32,7 @@ public class Enrollment {
     private Course course;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "enrollment_status")
+    @Column(nullable = false, length = 50)
     private EnrollmentStatus status = EnrollmentStatus.active;
 
     @Column(nullable = false, precision = 5, scale = 2)

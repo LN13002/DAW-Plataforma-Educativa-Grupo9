@@ -36,7 +36,7 @@ function getLessonCourse(lesson, modulesById) {
   return getLessonModule(lesson, modulesById)?.courseTitle ?? 'Curso sin identificar'
 }
 
-export function LessonsPage() {
+export function LessonsPage({ allowedCourseIds = null }) {
   const [lessons, setLessons] = useState([])
   const [modules, setModules] = useState([])
   const [formMode, setFormMode] = useState(null)
@@ -50,6 +50,16 @@ export function LessonsPage() {
 
   const modulesById = useMemo(() => new Map(modules.map((module) => [module.id, module])), [modules])
   const selectedModule = modulesById.get(form.moduleId)
+
+  // Si hay allowedCourseIds, solo mostrar módulos de esos cursos (vista instructor)
+  const visibleModules = useMemo(
+    () => (allowedCourseIds ? modules.filter((m) => allowedCourseIds.has(m.courseId)) : modules),
+    [allowedCourseIds, modules]
+  )
+  const allowedModuleIds = useMemo(
+    () => (allowedCourseIds ? new Set(visibleModules.map((m) => m.id)) : null),
+    [allowedCourseIds, visibleModules]
+  )
 
   const field = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))
 
@@ -126,6 +136,7 @@ export function LessonsPage() {
 
     return lessons
       .filter((lesson) => {
+        if (allowedModuleIds && !allowedModuleIds.has(lesson.moduleId)) return false
         const module = getLessonModule(lesson, modulesById)
         const course = getLessonCourse(lesson, modulesById)
         const matchesModule = moduleFilter === 'all' || lesson.moduleId === moduleFilter
@@ -146,15 +157,16 @@ export function LessonsPage() {
 
         return courseA.localeCompare(courseB) || moduleA - moduleB || Number(a.position) - Number(b.position)
       })
-  }, [lessons, moduleFilter, modulesById, search])
+  }, [allowedModuleIds, lessons, moduleFilter, modulesById, search])
 
   const stats = useMemo(() => {
-    const videos = lessons.filter((lesson) => lesson.type === 'video').length
-    const published = lessons.filter((lesson) => lesson.published).length
-    const totalMinutes = lessons.reduce((sum, lesson) => sum + Math.max(1, Math.round(Number(lesson.durationSeconds ?? 0) / 60)), 0)
+    const visible = allowedModuleIds ? lessons.filter((l) => allowedModuleIds.has(l.moduleId)) : lessons
+    const videos = visible.filter((lesson) => lesson.type === 'video').length
+    const published = visible.filter((lesson) => lesson.published).length
+    const totalMinutes = visible.reduce((sum, lesson) => sum + Math.max(1, Math.round(Number(lesson.durationSeconds ?? 0) / 60)), 0)
 
-    return { videos, published, totalMinutes }
-  }, [lessons])
+    return { total: visible.length, videos, published, totalMinutes }
+  }, [allowedModuleIds, lessons])
 
   return (
     <main className="page lessons-admin-page">
@@ -170,7 +182,7 @@ export function LessonsPage() {
         <article className="lesson-summary-card">
           <Icon name="play_lesson" />
           <div>
-            <strong>{lessons.length}</strong>
+            <strong>{stats.total}</strong>
             <span>Lecciones totales</span>
           </div>
         </article>
@@ -212,7 +224,7 @@ export function LessonsPage() {
               Módulo
               <select className="form-input" value={form.moduleId} onChange={field('moduleId')} required>
                 <option value="">Selecciona un módulo</option>
-                {modules.map((module) => (
+                {visibleModules.map((module) => (
                   <option value={module.id} key={module.id}>
                     {getModuleLabel(module)}
                   </option>
@@ -295,7 +307,7 @@ export function LessonsPage() {
 
           <select className="form-input lesson-module-filter" value={moduleFilter} onChange={(event) => setModuleFilter(event.target.value)}>
             <option value="all">Todos los módulos</option>
-            {modules.map((module) => (
+            {visibleModules.map((module) => (
               <option value={module.id} key={module.id}>
                 {getModuleLabel(module)}
               </option>

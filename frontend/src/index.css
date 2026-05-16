@@ -4368,3 +4368,105 @@ h3,
 .form-input::placeholder {
   color: var(--color-muted-2);
 }
+
+/* ============================================================
+   Player Discussion Panel
+   ============================================================ */
+
+.discussion-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.comment-compose {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.comment-compose-field {
+  flex: 1;
+  display: grid;
+  gap: 8px;
+}
+
+.comment-compose-field textarea {
+  width: 100%;
+  resize: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+}
+
+.comment-compose-field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgb(97 0 0 / 12%);
+}
+
+.comment-compose-field button {
+  justify-self: end;
+}
+
+.player-comment {
+  display: grid;
+  gap: 10px;
+}
+
+.player-comment.is-reply {
+  padding-left: 48px;
+}
+
+.player-comment-main {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.player-comment-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.player-comment-body strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.player-comment-body p {
+  font-size: 14px;
+  color: var(--color-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.comment-edit-form {
+  display: grid;
+  gap: 8px;
+}
+
+.comment-edit-form textarea {
+  width: 100%;
+  resize: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.comment-edit-form textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgb(97 0 0 / 12%);
+}

@@ -8,6 +8,15 @@ const learnerNavItems = [
   ['settings', 'Ajustes', 'profile'],
 ]
 
+const instructorNavItems = [
+  ['home', 'Inicio', 'home'],
+  ['view_module', 'Módulos', 'modules'],
+  ['play_lesson', 'Lecciones', 'lessons'],
+  ['explore', 'Cursos', 'explore'],
+  ['workspace_premium', 'Diplomas', 'certificates'],
+  ['settings', 'Ajustes', 'profile'],
+]
+
 const adminNavItems = [
   ['home', 'Inicio', 'home'],
   ['view_module', 'Módulos', 'modules'],
@@ -23,18 +32,13 @@ import { Icon } from './Icon'
 export function AppShell({ user, personas = [], activeView, onNavigate, onLogout, onPersonaSwitch, children }) {
   const [accountOpen, setAccountOpen] = useState(false)
   const isAdmin = user.plan === 'admin'
-  const navItems = isAdmin ? adminNavItems : learnerNavItems
+  const isInstructor = user.plan === 'instructor'
+  const navItems = isAdmin ? adminNavItems : isInstructor ? instructorNavItems : learnerNavItems
   const topbarItems = isAdmin
-    ? [
-        ['Panel', 'modules'],
-        ['Inscripciones', 'enrollments'],
-        ['Lecciones', 'lessons'],
-      ]
-    : [
-        ['Mis Cursos', 'library'],
-        ['Explorar', 'explore'],
-        ['Comunidad', 'profile'],
-      ]
+    ? [['Panel', 'modules'], ['Inscripciones', 'enrollments'], ['Lecciones', 'lessons']]
+    : isInstructor
+    ? [['Mis Módulos', 'modules'], ['Mis Lecciones', 'lessons'], ['Cursos', 'explore']]
+    : [['Mis Cursos', 'library'], ['Explorar', 'explore'], ['Comunidad', 'profile']]
 
   const handleNavigate = (view) => {
     setAccountOpen(false)

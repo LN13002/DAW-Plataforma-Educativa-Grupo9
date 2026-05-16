@@ -50,7 +50,10 @@ const DEDICATED_RESOURCE_VIEWS = new Set([
   'lessons',
   'lesson-progress',
 ])
-const ADMIN_ONLY_VIEWS = new Set(['users', 'categories', 'modules', 'comments', 'enrollments', 'lessons', 'lesson-progress', 'admin'])
+// Vistas exclusivas para administrador
+const ADMIN_ONLY_VIEWS = new Set(['users', 'categories', 'comments', 'enrollments', 'lesson-progress', 'admin'])
+// Vistas accesibles para admin e instructor (con filtrado por cursos propios para instructor)
+const STAFF_ONLY_VIEWS = new Set(['modules', 'lessons'])
 
 function normalizeRole(role) {
   return String(role ?? '').toLowerCase()
@@ -212,7 +215,8 @@ function App() {
     setAppCertificates(nextCertificates)
     setSelectedCourse((current) => nextCourses.find((course) => course.id === current?.id) ?? nextCourses[0] ?? null)
     if (role === 'admin' && view === 'progress') setView('home')
-    if (role !== 'admin' && ADMIN_ONLY_VIEWS.has(view)) setView('home')
+    if (ADMIN_ONLY_VIEWS.has(view) && role !== 'admin') setView('home')
+    if (STAFF_ONLY_VIEWS.has(view) && role !== 'admin' && role !== 'instructor') setView('home')
     setCompletedMessage(`Viendo como ${roleLabel(user.role)}: ${user.firstName} ${user.lastName}`)
     window.setTimeout(() => setCompletedMessage(''), 2500)
   }
@@ -345,11 +349,22 @@ function App() {
   }
 
   const isAdminView = appUser.plan === 'admin'
+  const isInstructorView = appUser.plan === 'instructor'
+  const instructorCourseIds = isInstructorView
+    ? new Set(appCourses.filter((course) => course.instructorId === appUser.id).map((course) => course.id))
+    : null
+
+  const canAccessView = (v) => {
+    if (ADMIN_ONLY_VIEWS.has(v)) return isAdminView
+    if (STAFF_ONLY_VIEWS.has(v)) return isAdminView || isInstructorView
+    return true
+  }
+
   const screenByView = {
-    modules: <ModulesPage />,
+    modules: <ModulesPage allowedCourseIds={instructorCourseIds} />,
     comments: <CommentsPage />,
     enrollments: <EnrollmentsPage />,
-    lessons: <LessonsPage />,
+    lessons: <LessonsPage allowedCourseIds={instructorCourseIds} />,
     'lesson-progress': <LessonProgressPage />,
     users: <UsersPage />,
     categories: <CategoriesPage />,
@@ -401,6 +416,7 @@ function App() {
         onSelectLesson={setActiveLesson}
         onComplete={markCompleted}
         completedMessage={completedMessage}
+        user={appUser}
       />
     ),
     library: <LibraryView courses={appCourses.filter((course) => course.progress > 0)} onOpenPlayer={openPlayer} />,
@@ -417,7 +433,7 @@ function App() {
     ),
   }
 
-  const screen = ADMIN_ONLY_VIEWS.has(view) && !isAdminView
+  const screen = !canAccessView(view)
     ? <RoleAccessView role={appUser.plan} onNavigate={setView} />
     : screenByView[view] ?? screenByView.home
 
@@ -612,9 +628,9 @@ function HomeView({
           ['workspace_premium', certificates.length, 'Certificados'],
         ]}
         actions={[
+          ['Mis módulos', 'Crea y organiza los módulos de tus cursos.', 'view_module', 'modules'],
+          ['Mis lecciones', 'Añade o actualiza el contenido de cada clase.', 'play_lesson', 'lessons'],
           ['Ver cursos', 'Abre el catálogo docente y revisa contenido.', 'school', 'explore'],
-          ['Progreso', 'Consulta tu avance como usuario activo.', 'track_changes', 'progress'],
-          ['Diplomas', 'Revisa certificados emitidos a esta persona.', 'workspace_premium', 'certificates'],
           ['Ajustes', 'Actualiza la información visible del perfil.', 'settings', 'profile'],
         ]}
         courses={visibleCourses}
@@ -921,8 +937,85 @@ function CourseDetailView({ course, modules, lessons, reviews, onBack, onStart, 
   )
 }
 
-function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, completedMessage }) {
+function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, completedMessage, user }) {
+  const [activeTab, setActiveTab] = useState('description')
+  const [comments, setComments] = useState([])
+  const [commentUsers, setCommentUsers] = useState([])
+  const [commentText, setCommentText] = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const [editText, setEditText] = useState('')
+  const [commentError, setCommentError] = useState('')
+
+  const commentUsersById = useMemo(() => new Map(commentUsers.map((u) => [u.id, u])), [commentUsers])
+  const topComments = useMemo(() => comments.filter((c) => !c.parentId), [comments])
+  const repliesByParent = useMemo(() => {
+    const map = new Map()
+    comments.filter((c) => c.parentId).forEach((c) => {
+      if (!map.has(c.parentId)) map.set(c.parentId, [])
+      map.get(c.parentId).push(c)
+    })
+    return map
+  }, [comments])
+
+  useEffect(() => {
+    if (!lesson?.id) return
+    setCommentError('')
+    Promise.all([api.getComments(), api.getUsers()])
+      .then(([commentsDto, usersDto]) => {
+        setComments(commentsDto.filter((c) => c.lessonId === lesson.id))
+        setCommentUsers(usersDto)
+      })
+      .catch(() => {})
+  }, [lesson?.id])
+
+  const refreshComments = async () => {
+    const updated = await api.getComments()
+    setComments(updated.filter((c) => c.lessonId === lesson.id))
+  }
+
+  const submitComment = async (event) => {
+    event.preventDefault()
+    if (!commentText.trim() || !user?.id) return
+    try {
+      await api.createComment({ userId: user.id, lessonId: lesson.id, content: commentText.trim(), parentId: null })
+      setCommentText('')
+      await refreshComments()
+    } catch {
+      setCommentError('No se pudo publicar el comentario.')
+    }
+  }
+
+  const saveEdit = async (comment) => {
+    try {
+      await api.updateComment(comment.id, {
+        userId: comment.userId,
+        lessonId: comment.lessonId,
+        content: editText.trim(),
+        parentId: comment.parentId ?? null,
+      })
+      setEditingId(null)
+      await refreshComments()
+    } catch {
+      setCommentError('No se pudo actualizar el comentario.')
+    }
+  }
+
+  const removeComment = async (id) => {
+    try {
+      await api.deleteComment(id)
+      setComments((prev) => prev.filter((c) => c.id !== id && c.parentId !== id))
+    } catch {
+      setCommentError('No se pudo eliminar el comentario.')
+    }
+  }
+
+  const getAuthorName = (userId) => {
+    const u = commentUsersById.get(userId)
+    return u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.email : 'Usuario'
+  }
+
   if (!course || !lesson) return null
+
   return (
     <main className="page player-page">
       {completedMessage ? <div className="toast">{completedMessage}</div> : null}
@@ -933,25 +1026,144 @@ function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, compl
 
           <section className="tabs-panel">
             <div className="tabs">
-              <button className="active" type="button">
+              <button className={activeTab === 'description' ? 'active' : ''} type="button" onClick={() => setActiveTab('description')}>
                 Descripcion
               </button>
-              <button type="button">Recursos ({PLAYER_RESOURCES.length})</button>
-              <button type="button">Discusion</button>
+              <button className={activeTab === 'resources' ? 'active' : ''} type="button" onClick={() => setActiveTab('resources')}>
+                Recursos ({PLAYER_RESOURCES.length})
+              </button>
+              <button className={activeTab === 'discussion' ? 'active' : ''} type="button" onClick={() => setActiveTab('discussion')}>
+                Discusion ({comments.length})
+              </button>
             </div>
+
             <div className="tab-content">
-              <p>
-                En esta leccion se profundiza en el patron API Gateway, rutas, autenticacion, rate limiting y
-                orquestacion basica entre servicios.
-              </p>
-              <div className="resource-grid">
-                {PLAYER_RESOURCES.map((resource) => (
-                  <a href="#" key={resource}>
-                    <Icon name={resource.includes('pdf') ? 'picture_as_pdf' : 'link'} />
-                    {resource}
-                  </a>
-                ))}
-              </div>
+              {activeTab === 'description' ? (
+                <p>
+                  {lesson.description ||
+                    'En esta leccion se profundiza en el patron API Gateway, rutas, autenticacion, rate limiting y orquestacion basica entre servicios.'}
+                </p>
+              ) : activeTab === 'resources' ? (
+                <div className="resource-grid">
+                  {PLAYER_RESOURCES.map((resource) => (
+                    <a href="#" key={resource}>
+                      <Icon name={resource.includes('pdf') ? 'picture_as_pdf' : 'link'} />
+                      {resource}
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="discussion-panel">
+                  {commentError ? <div className="data-notice">{commentError}</div> : null}
+
+                  {user?.id ? (
+                    <form className="comment-compose" onSubmit={submitComment}>
+                      <div className="avatar comment-avatar">{user.initials}</div>
+                      <div className="comment-compose-field">
+                        <textarea
+                          placeholder="Escribe una duda o aporte sobre esta lección..."
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          rows={2}
+                          required
+                        />
+                        <Button type="submit">
+                          <Icon name="send" />
+                          Publicar
+                        </Button>
+                      </div>
+                    </form>
+                  ) : null}
+
+                  {topComments.length === 0 ? (
+                    <div className="comment-empty-state">Sé el primero en comentar esta lección.</div>
+                  ) : (
+                    topComments.map((comment) => {
+                      const authorName = getAuthorName(comment.userId)
+                      const isOwn = comment.userId === user?.id
+                      const replies = repliesByParent.get(comment.id) ?? []
+
+                      return (
+                        <article className="player-comment" key={comment.id}>
+                          <div className="player-comment-main">
+                            <div className="avatar comment-avatar">{authorName.slice(0, 2).toUpperCase()}</div>
+                            <div className="player-comment-body">
+                              <strong>{authorName}</strong>
+                              {editingId === comment.id ? (
+                                <div className="comment-edit-form">
+                                  <textarea value={editText} onChange={(e) => setEditText(e.target.value)} rows={2} />
+                                  <div className="row-actions">
+                                    <Button type="button" onClick={() => saveEdit(comment)}>
+                                      <Icon name="save" />
+                                      Guardar
+                                    </Button>
+                                    <Button variant="secondary" type="button" onClick={() => setEditingId(null)}>
+                                      Cancelar
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p>{comment.content}</p>
+                              )}
+                              <div className="comment-card-footer">
+                                <span>
+                                  <Icon name="thumb_up" />
+                                  {comment.likes ?? 0}
+                                </span>
+                                {isOwn && editingId !== comment.id ? (
+                                  <div className="row-actions">
+                                    <button
+                                      type="button"
+                                      aria-label="Editar comentario"
+                                      onClick={() => { setEditingId(comment.id); setEditText(comment.content) }}
+                                    >
+                                      <Icon name="edit" />
+                                    </button>
+                                    <button
+                                      className="danger"
+                                      type="button"
+                                      aria-label="Eliminar comentario"
+                                      onClick={() => removeComment(comment.id)}
+                                    >
+                                      <Icon name="delete" />
+                                    </button>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          </div>
+
+                          {replies.map((reply) => {
+                            const replyName = getAuthorName(reply.userId)
+                            const isOwnReply = reply.userId === user?.id
+                            return (
+                              <div className="player-comment is-reply" key={reply.id}>
+                                <div className="avatar comment-avatar mini">{replyName.slice(0, 2).toUpperCase()}</div>
+                                <div className="player-comment-body">
+                                  <strong>{replyName}</strong>
+                                  <p>{reply.content}</p>
+                                  {isOwnReply ? (
+                                    <div className="row-actions">
+                                      <button
+                                        className="danger"
+                                        type="button"
+                                        aria-label="Eliminar respuesta"
+                                        onClick={() => removeComment(reply.id)}
+                                      >
+                                        <Icon name="delete" />
+                                      </button>
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </article>
+                      )
+                    })
+                  )}
+                </div>
+              )}
             </div>
           </section>
         </div>

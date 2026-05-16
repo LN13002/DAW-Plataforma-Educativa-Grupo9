@@ -120,7 +120,7 @@ function App() {
           setSelectedCourse((current) => mappedCourses.find((course) => course.id === current?.id) ?? mappedCourses[0])
         }
 
-        setAppCategories(['Todos', ...mappedCategories])
+        setAppCategories(['Todos', ...mappedCategories.map((category) => category.name)])
         if (mappedLessons.length > 0) {
           setAppLessons(mappedLessons)
           setActiveLesson(mappedLessons.find((lesson) => lesson.status === 'active') ?? mappedLessons[0])
@@ -165,7 +165,7 @@ function App() {
   }
 
   const markCompleted = async () => {
-    if (selectedCourse.enrollmentId && activeLesson?.id) {
+    if (selectedCourse?.enrollmentId && activeLesson?.id) {
       try {
         await api.upsertLessonProgress({
           enrollmentId: selectedCourse.enrollmentId,

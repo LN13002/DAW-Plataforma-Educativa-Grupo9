@@ -1,333 +1,41 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '../../components/Button'
 import { Icon } from '../../components/Icon'
-import { backendResources } from '../../data/mockData'
+import { api } from '../../services/api'
 
-const mockComments =
-  backendResources.find((r) => r.key === 'comments').records
+const emptyForm = { userId: '', lessonId: '', parentId: '', content: '' }
 
 export function CommentsPage() {
-  const [comments, setComments] = useState(mockComments)
+  const [rows, setRows] = useState([])
   const [formMode, setFormMode] = useState(null)
   const [selected, setSelected] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [form, setForm] = useState(emptyForm)
+  const [error, setError] = useState('')
+  const load = async () => { try { setRows(await api.getComments()); setError('') } catch { setError('No se pudieron cargar comentarios.') } }
+  useEffect(() => { load() }, [])
 
-  const [form, setForm] = useState({
-    userId: '',
-    lessonId: '',
-    parentId: '-',
-    content: '',
-    likes: '0'
-  })
-
-  const openCreate = () => {
-    setForm({
-      userId: '',
-      lessonId: '',
-      parentId: '-',
-      content: '',
-      likes: '0'
-    })
-
-    setSelected(null)
-    setFormMode('create')
-  }
-
-  const openEdit = (comment) => {
-    setForm({ ...comment })
-    setSelected(comment)
-    setFormMode('edit')
-  }
-
-  const handleSubmit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
-
-    if (formMode === 'create') {
-      const newId = `COM-${String(comments.length + 1).padStart(3, '0')}`
-
-      setComments([
-        ...comments,
-        {
-          ...form,
-          id: newId
-        }
-      ])
-    } else {
-      setComments(
-        comments.map((c) =>
-          c.id === selected.id
-            ? { ...selected, ...form }
-            : c
-        )
-      )
-    }
-
-    setFormMode(null)
+    const payload = { userId: form.userId, lessonId: form.lessonId, parentId: form.parentId || null, content: form.content }
+    try {
+      if (formMode === 'create') await api.createComment(payload)
+      else await api.updateComment(selected.id, payload)
+      setFormMode(null)
+      await load()
+    } catch { setError('No se pudo guardar comentario.') }
   }
 
-  const confirmDelete = () => {
-    setComments(
-      comments.filter((c) => c.id !== deleteTarget.id)
-    )
-
-    setDeleteTarget(null)
-  }
-
-  return (
-    <main className="page">
-      <section className="page-header">
-        <span className="eyebrow">/api/comments</span>
-
-        <h1>Comentarios</h1>
-
-        <p>
-          Discusión por lección con respuestas anidadas y likes.
-        </p>
-      </section>
-
-      {formMode ? (
-        <section
-          className="admin-panel"
-          style={{ marginBottom: '2rem' }}
-        >
-          <div className="admin-panel-header">
-            <div>
-              <span className="eyebrow">
-                {formMode === 'create'
-                  ? 'POST /api/comments'
-                  : 'PUT /api/comments/:id'}
-              </span>
-
-              <h2>
-                {formMode === 'create'
-                  ? 'Crear comentario'
-                  : 'Editar comentario'}
-              </h2>
-            </div>
-          </div>
-
-          <form
-            onSubmit={handleSubmit}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem',
-              maxWidth: '480px'
-            }}
-          >
-            <label>
-              Usuario ID
-
-              <input
-                value={form.userId}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    userId: e.target.value
-                  })
-                }
-                placeholder="USR-001"
-                required
-              />
-            </label>
-
-            <label>
-              Lección ID
-
-              <input
-                value={form.lessonId}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    lessonId: e.target.value
-                  })
-                }
-                placeholder="LES-001"
-                required
-              />
-            </label>
-
-            <label>
-              Responde a (Parent ID)
-
-              <input
-                value={form.parentId}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    parentId: e.target.value
-                  })
-                }
-                placeholder="- (ninguno)"
-              />
-            </label>
-
-            <label>
-              Contenido
-
-              <textarea
-                value={form.content}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    content: e.target.value
-                  })
-                }
-                placeholder="Escribe tu comentario..."
-                rows={3}
-                required
-              />
-            </label>
-
-            <div
-              style={{
-                display: 'flex',
-                gap: '0.75rem'
-              }}
-            >
-              <Button type="submit">
-                <Icon
-                  name={
-                    formMode === 'create'
-                      ? 'add'
-                      : 'save'
-                  }
-                />
-
-                {formMode === 'create'
-                  ? 'Publicar'
-                  : 'Guardar'}
-              </Button>
-
-              <Button
-                variant="secondary"
-                onClick={() => setFormMode(null)}
-              >
-                Cancelar
-              </Button>
-            </div>
-          </form>
-        </section>
-      ) : null}
-
-      <section className="admin-panel">
-        <div className="admin-panel-header">
-          <div>
-            <span className="eyebrow">
-              GET /api/comments
-            </span>
-
-            <h2>Listado de comentarios</h2>
-          </div>
-
-          <Button onClick={openCreate}>
-            <Icon name="add" />
-            Nuevo comentario
-          </Button>
-        </div>
-
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Usuario</th>
-                <th>Lección</th>
-                <th>Responde a</th>
-                <th>Contenido</th>
-                <th>Likes</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {comments.map((comment) => (
-                <tr key={comment.id}>
-                  <td>{comment.id}</td>
-                  <td>{comment.userId}</td>
-                  <td>{comment.lessonId}</td>
-                  <td>{comment.parentId}</td>
-                  <td>{comment.content}</td>
-                  <td>{comment.likes}</td>
-
-                  <td>
-                    <div className="row-actions">
-                      <button
-                        type="button"
-                        aria-label="Editar"
-                        onClick={() => openEdit(comment)}
-                      >
-                        <Icon name="edit" />
-                      </button>
-
-                      <button
-                        type="button"
-                        aria-label="Eliminar"
-                        onClick={() =>
-                          setDeleteTarget(comment)
-                        }
-                      >
-                        <Icon name="delete" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {deleteTarget ? (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100
-          }}
-        >
-          <div
-            className="auth-card"
-            style={{
-              maxWidth: '360px',
-              width: '100%'
-            }}
-          >
-            <div className="auth-card-header">
-              <h2>Eliminar comentario</h2>
-
-              <p>
-                ¿Estás seguro que deseas eliminar este comentario?
-                Esta acción no se puede deshacer.
-              </p>
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                gap: '0.75rem',
-                marginTop: '1rem'
-              }}
-            >
-              <Button onClick={confirmDelete}>
-                <Icon name="delete" />
-                Eliminar
-              </Button>
-
-              <Button
-                variant="secondary"
-                onClick={() => setDeleteTarget(null)}
-              >
-                Cancelar
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </main>
-  )
+  return <main className="page"><section className="page-header"><span className="eyebrow">/api/comments</span><h1>Comentarios</h1></section>{error ? <div className="data-notice">{error}</div> : null}
+  {formMode ? <section className="admin-panel" style={{ marginBottom:'2rem' }}><form onSubmit={submit} style={{ display:'grid', gap:'1rem', padding:'24px', maxWidth:'560px' }}>
+    <input className="form-input" placeholder="User UUID" value={form.userId} onChange={(e)=>setForm((p)=>({...p,userId:e.target.value}))} required />
+    <input className="form-input" placeholder="Lesson UUID" value={form.lessonId} onChange={(e)=>setForm((p)=>({...p,lessonId:e.target.value}))} required />
+    <input className="form-input" placeholder="Parent UUID (opcional)" value={form.parentId} onChange={(e)=>setForm((p)=>({...p,parentId:e.target.value}))} />
+    <textarea className="form-input" placeholder="Contenido" value={form.content} onChange={(e)=>setForm((p)=>({...p,content:e.target.value}))} required rows={3} />
+    <div style={{ display:'flex', gap:'0.75rem' }}><Button type="submit"><Icon name="save" />Guardar</Button><Button variant="secondary" type="button" onClick={()=>setFormMode(null)}>Cancelar</Button></div>
+  </form></section> : null}
+  <section className="admin-panel"><div className="admin-panel-header"><h2>Listado</h2><Button onClick={()=>{setForm(emptyForm);setSelected(null);setFormMode('create')}}><Icon name="add" />Nuevo</Button></div>
+  <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>User</th><th>Lesson</th><th>Contenido</th><th>Likes</th><th>Acciones</th></tr></thead><tbody>{rows.map((r)=><tr key={r.id}><td>{r.id}</td><td>{r.userId}</td><td>{r.lessonId}</td><td>{r.content}</td><td>{r.likes}</td><td><div className="row-actions"><button type="button" onClick={()=>{setSelected(r);setForm({ userId:r.userId,lessonId:r.lessonId,parentId:r.parentId??'',content:r.content });setFormMode('edit')}}><Icon name="edit" /></button><button type="button" onClick={()=>setDeleteTarget(r)}><Icon name="delete" /></button></div></td></tr>)}</tbody></table></div></section>
+  {deleteTarget ? <div className="modal-overlay" style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}><div className="auth-card"><h2>Eliminar</h2><div style={{ display:'flex', gap:'0.75rem' }}><Button onClick={async()=>{try{await api.deleteComment(deleteTarget.id);setDeleteTarget(null);await load()}catch{setError('No se pudo eliminar comentario.')}}}>Eliminar</Button><Button variant="secondary" onClick={()=>setDeleteTarget(null)}>Cancelar</Button></div></div></div> : null}
+  </main>
 }

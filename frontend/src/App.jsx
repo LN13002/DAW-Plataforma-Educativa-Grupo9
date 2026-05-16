@@ -8,40 +8,64 @@ import { LessonList } from './components/LessonList'
 import { ProgressBar } from './components/ProgressBar'
 import { StatCard } from './components/StatCard'
 import { VideoPlayerCard } from './components/VideoPlayerCard'
-import {
-  categories,
-  backendResources,
-  certificates,
-  courses,
-  currentUser,
-  lessons,
-  modules,
-  resources,
-  reviews,
-} from './data/mockData'
 import { api, mapCategoryDto, mapCertificateDto, mapCourseDto, mapLessonDto } from './services/api'
 import { ModulesPage } from './pages/modules/ModulesPage'
 import { CommentsPage } from './pages/comments/CommentsPage'
 import { LessonsPage } from './pages/lessons/LessonsPage'
 import { LessonProgressPage } from './pages/lesson-progress/LessonProgressPage'
-
-// --- INTEGRACIÓN DE TUS NUEVOS MÓDULOS ---
+import { EnrollmentsPage } from './pages/enrollments/EnrollmentsPage'
 import { UsersPage } from './pages/users/UsersPage'
 import { CategoriesPage } from './pages/categories/CategoriesPage'
+
+const DEFAULT_USER = {
+  id: '',
+  name: 'Usuario',
+  initials: 'US',
+  faculty: 'Usuario registrado en UES Virtual',
+  email: '',
+  plan: 'student',
+  streak: 0,
+}
+
+const PLAYER_RESOURCES = ['Slides del tema', 'Guia de laboratorio', 'Repositorio de ejemplo']
+const COURSE_PRICE_LABEL = 'Gratis'
+
+const BACKEND_RESOURCES = [
+  { key: 'users', title: 'Usuarios', endpoint: '/api/users', icon: 'group' },
+  { key: 'courses', title: 'Cursos', endpoint: '/api/courses', icon: 'school' },
+  { key: 'categories', title: 'Categorias', endpoint: '/api/categories', icon: 'category' },
+  { key: 'modules', title: 'Modulos', endpoint: '/api/modules', icon: 'view_module' },
+  { key: 'lessons', title: 'Lecciones', endpoint: '/api/lessons', icon: 'play_lesson' },
+  { key: 'enrollments', title: 'Inscripciones', endpoint: '/api/enrollments', icon: 'how_to_reg' },
+  { key: 'comments', title: 'Comentarios', endpoint: '/api/comments', icon: 'forum' },
+  { key: 'certificates', title: 'Certificados', endpoint: '/api/certificates', icon: 'workspace_premium' },
+]
+
+const DEDICATED_RESOURCE_VIEWS = new Set([
+  'users',
+  'categories',
+  'modules',
+  'comments',
+  'enrollments',
+  'lessons',
+  'lesson-progress',
+])
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true)
   const [authView, setAuthView] = useState('login')
   const [view, setView] = useState('home')
-  const [appUser, setAppUser] = useState(currentUser)
-  const [appCourses, setAppCourses] = useState(courses)
-  const [appCategories, setAppCategories] = useState(categories)
-  const [appLessons, setAppLessons] = useState(lessons)
-  const [appCertificates, setAppCertificates] = useState(certificates)
-  const [appModules, setAppModules] = useState(modules)
-  const [selectedCourse, setSelectedCourse] = useState(courses[0])
+  const [appUser, setAppUser] = useState(DEFAULT_USER)
+  const [appCourses, setAppCourses] = useState([])
+  const [appCategories, setAppCategories] = useState(['Todos'])
+  const [appLessons, setAppLessons] = useState([])
+  const [appCertificates, setAppCertificates] = useState([])
+  const [appModules, setAppModules] = useState([])
+  const [appEnrollments, setAppEnrollments] = useState([])
+  const [appReviews, setAppReviews] = useState([])
+  const [selectedCourse, setSelectedCourse] = useState(null)
   const [activeCategory, setActiveCategory] = useState('Todos')
-  const [activeLesson, setActiveLesson] = useState(lessons.find((lesson) => lesson.status === 'active'))
+  const [activeLesson, setActiveLesson] = useState(null)
   const [activeResourceKey, setActiveResourceKey] = useState('users')
   const [completedMessage, setCompletedMessage] = useState('')
   const [dataNotice, setDataNotice] = useState('')
@@ -59,6 +83,7 @@ function App() {
           lessonsDto,
           enrollmentsDto,
           certificatesDto,
+          reviewsDto,
         ] = await Promise.all([
           api.getUsers(),
           api.getCourses(),
@@ -67,6 +92,7 @@ function App() {
           api.getLessons(),
           api.getEnrollments(),
           api.getCertificates(),
+          api.getReviews(),
         ])
 
         if (!mounted) return
@@ -80,7 +106,7 @@ function App() {
             faculty: 'Usuario registrado en UES Virtual',
             email: student.email,
             plan: student.role,
-            streak: currentUser.streak,
+            streak: 0,
           })
         }
 
@@ -94,18 +120,24 @@ function App() {
           setSelectedCourse((current) => mappedCourses.find((course) => course.id === current?.id) ?? mappedCourses[0])
         }
 
-        if (mappedCategories.length > 0) setAppCategories(mappedCategories)
+        setAppCategories(['Todos', ...mappedCategories])
         if (mappedLessons.length > 0) {
           setAppLessons(mappedLessons)
           setActiveLesson(mappedLessons.find((lesson) => lesson.status === 'active') ?? mappedLessons[0])
         }
-        if (mappedCertificates.length > 0) setAppCertificates(mappedCertificates)
-        if (modulesDto.length > 0) setAppModules(modulesDto)
+        setAppCertificates(mappedCertificates)
+        setAppModules(modulesDto)
+        setAppEnrollments(enrollmentsDto)
+        setAppReviews(reviewsDto.map((review, index) => ({
+          name: `Usuario ${index + 1}`,
+          rating: review.rating,
+          text: review.body ?? 'Sin comentario',
+        })))
 
         setDataNotice('')
       } catch {
         if (mounted) {
-          setDataNotice('Usando datos de ejemplo. Levanta el backend para consumir la API real.')
+          setDataNotice('No se pudo cargar la API del backend.')
         }
       }
     }
@@ -152,6 +184,46 @@ function App() {
     window.setTimeout(() => setCompletedMessage(''), 3500)
   }
 
+  const handleEnrollCourse = async (course) => {
+    if (!appUser?.id) {
+      setCompletedMessage('No hay usuario activo para crear la inscripcion.')
+      return
+    }
+
+    if (course.enrollmentId) {
+      openPlayer(course)
+      return
+    }
+
+    try {
+      const created = await api.createEnrollment({
+        userId: appUser.id,
+        courseId: course.id,
+      })
+      const nextEnrollments = [...appEnrollments, created]
+      setAppEnrollments(nextEnrollments)
+      const nextCourses = appCourses.map((item) =>
+        item.id === course.id
+          ? {
+              ...item,
+              enrollmentId: created.id,
+              enrollmentStatus: created.status,
+              progress: Number(created.progress ?? 0),
+            }
+          : item
+      )
+      setAppCourses(nextCourses)
+      const updatedCourse = nextCourses.find((item) => item.id === course.id) ?? course
+      setSelectedCourse(updatedCourse)
+      setCompletedMessage('Inscripcion creada correctamente en el backend.')
+      setView('player')
+    } catch {
+      setCompletedMessage('No se pudo crear la inscripcion. Revisa backend y datos del usuario.')
+    }
+
+    window.setTimeout(() => setCompletedMessage(''), 3500)
+  }
+
   const handleLogin = async (event) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
@@ -191,11 +263,11 @@ function App() {
             faculty: 'Usuario registrado en UES Virtual',
             email: foundUser.email,
             plan: foundUser.role,
-            streak: currentUser.streak,
+            streak: 0,
           })
         }
       } catch {
-        setDataNotice('Login en modo demo. Levanta el backend para buscar usuarios reales.')
+        setDataNotice('No se pudo autenticar contra la API.')
       }
     }
     setIsAuthenticated(true)
@@ -219,6 +291,13 @@ function App() {
   }
 
   const screen = {
+    modules: <ModulesPage />,
+    comments: <CommentsPage />,
+    enrollments: <EnrollmentsPage />,
+    lessons: <LessonsPage />,
+    'lesson-progress': <LessonProgressPage />,
+    users: <UsersPage />,
+    categories: <CategoriesPage />,
     home: (
       <HomeView
         user={appUser}
@@ -245,8 +324,10 @@ function App() {
         course={selectedCourse}
         modules={appModules}
         lessons={appLessons}
+        reviews={appReviews}
         onBack={() => setView('explore')}
         onStart={() => openPlayer(selectedCourse)}
+        onEnroll={handleEnrollCourse}
       />
     ),
     player: (
@@ -262,18 +343,9 @@ function App() {
     library: <LibraryView courses={appCourses.filter((course) => course.progress > 0)} onOpenPlayer={openPlayer} />,
     certificates: <CertificatesView certificates={appCertificates} />,
     profile: <ProfileView user={appUser} courses={appCourses} certificates={appCertificates} />,
-    
-    // --- TUS VISTAS REALES INTEGRADAS ---
-    users: <UsersPage />,
-    categories: <CategoriesPage />,
-    modules: <ModulesPage />,
-    comments: <CommentsPage />,
-    lessons: <LessonsPage />,
-    'lesson-progress': <LessonProgressPage />,
-    
     admin: (
       <BackendPanelView
-        resources={backendResources}
+        resources={BACKEND_RESOURCES}
         activeResourceKey={activeResourceKey}
         setActiveResourceKey={setActiveResourceKey}
         onNavigate={setView}
@@ -404,7 +476,13 @@ function HomeView({ user, courses, categories, certificates, onOpenCourse, onOpe
 
       <section className="dashboard-grid">
         <div className="content-stack">
-          <CourseCard course={currentCourse} onOpen={() => onOpenPlayer(currentCourse)} actionLabel="Continuar" />
+          {currentCourse ? (
+            <CourseCard course={currentCourse} onOpen={() => onOpenPlayer(currentCourse)} actionLabel="Continuar" />
+          ) : (
+            <section className="section-block">
+              <p>Cargando cursos...</p>
+            </section>
+          )}
 
           <section className="section-block categories-section">
             <div className="section-heading">
@@ -456,7 +534,8 @@ function ExploreView({ courses, categories, activeCategory, setActiveCategory, o
   )
 }
 
-function CourseDetailView({ course, modules, lessons, onBack, onStart }) {
+function CourseDetailView({ course, modules, lessons, reviews, onBack, onStart, onEnroll }) {
+  if (!course) return null
   const courseModules = modules.filter((module) => !module.courseId || module.courseId === course.id)
 
   return (
@@ -559,8 +638,8 @@ function CourseDetailView({ course, modules, lessons, onBack, onStart }) {
         </div>
 
         <aside className="enroll-card">
-          <strong>{course.price}</strong>
-          <Button onClick={onStart}>
+          <strong>{COURSE_PRICE_LABEL}</strong>
+          <Button onClick={() => (course.progress > 0 || course.enrollmentId ? onStart() : onEnroll(course))}>
             <Icon name={course.progress > 0 ? 'play_circle' : 'school'} />
             {course.progress > 0 ? 'Continuar curso' : 'Inscribirme'}
           </Button>
@@ -581,6 +660,7 @@ function CourseDetailView({ course, modules, lessons, onBack, onStart }) {
 }
 
 function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, completedMessage }) {
+  if (!course || !lesson) return null
   return (
     <main className="page player-page">
       {completedMessage ? <div className="toast">{completedMessage}</div> : null}
@@ -594,7 +674,7 @@ function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, compl
               <button className="active" type="button">
                 Descripcion
               </button>
-              <button type="button">Recursos ({resources.length})</button>
+              <button type="button">Recursos ({PLAYER_RESOURCES.length})</button>
               <button type="button">Discusion</button>
             </div>
             <div className="tab-content">
@@ -603,7 +683,7 @@ function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, compl
                 orquestacion basica entre servicios.
               </p>
               <div className="resource-grid">
-                {resources.map((resource) => (
+                {PLAYER_RESOURCES.map((resource) => (
                   <a href="#" key={resource}>
                     <Icon name={resource.includes('pdf') ? 'picture_as_pdf' : 'link'} />
                     {resource}
@@ -724,6 +804,7 @@ function ProfileView({ user, courses, certificates }) {
 
 function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey, onNavigate }) {
   const activeResource = resources.find((resource) => resource.key === activeResourceKey) ?? resources[0]
+  const hasDedicatedView = DEDICATED_RESOURCE_VIEWS.has(activeResource.key)
 
   return (
     <main className="page">
@@ -731,8 +812,7 @@ function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey, 
         <span className="eyebrow">Mapa del backend</span>
         <h1>Pantallas por recurso REST</h1>
         <p>
-          Cada tarjeta corresponde a un controlador del backend. Por ahora usa datos mock con los mismos campos de los
-          DTOs para que luego sea directo conectar la API.
+          Cada tarjeta corresponde a un controlador del backend conectado por API.
         </p>
       </section>
 
@@ -743,9 +823,9 @@ function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey, 
             type="button"
             key={resource.key}
             onClick={() => {
-              setActiveResourceKey(resource.key);
-              if(resource.key === 'users' || resource.key === 'categories') {
-                 onNavigate(resource.key);
+              setActiveResourceKey(resource.key)
+              if (resource.key === 'users' || resource.key === 'categories') {
+                onNavigate(resource.key)
               }
             }}
           >
@@ -761,57 +841,14 @@ function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey, 
           <div>
             <span className="eyebrow">{activeResource.endpoint}</span>
             <h2>{activeResource.title}</h2>
-            <p>{activeResource.description}</p>
+            <p>Gestiona este recurso desde su pagina dedicada en el menu lateral.</p>
           </div>
-          <Button onClick={() => onNavigate(activeResource.key)}>
-            <Icon name="open_in_new" />
-            Abrir Gestion Real
-          </Button>
-        </div>
-
-        <div className="admin-actions">
-          <label className="search admin-search">
-            <Icon name="search" />
-            <input placeholder={`Buscar en ${activeResource.title.toLowerCase()}`} type="search" />
-          </label>
-          <Button variant="secondary">
-            <Icon name="sync" />
-            Sincronizar
-          </Button>
-        </div>
-
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                {activeResource.fields.map((field) => (
-                  <th key={field}>{field}</th>
-                ))}
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activeResource.records.map((record) => (
-                <tr key={record.id}>
-                  <td>{record.id}</td>
-                  {activeResource.fields.map((field) => (
-                    <td key={field}>{record[field]}</td>
-                  ))}
-                  <td>
-                    <div className="row-actions">
-                      <button type="button" aria-label="Editar">
-                        <Icon name="edit" />
-                      </button>
-                      <button type="button" aria-label="Eliminar">
-                        <Icon name="delete" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {hasDedicatedView ? (
+            <Button onClick={() => onNavigate(activeResource.key)}>
+              <Icon name="open_in_new" />
+              Abrir Gestion Real
+            </Button>
+          ) : null}
         </div>
       </section>
 
@@ -859,4 +896,4 @@ function InfoPanel({ title, children }) {
   )
 }
 
-export default App;
+export default App

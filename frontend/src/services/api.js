@@ -56,17 +56,73 @@ export const api = {
   // --- RESTO DE RECURSOS ---
   getCourses: () => request('/api/courses'),
   getModules: () => request('/api/modules'),
+  createModule: (payload) =>
+    request('/api/modules', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateModule: (id, payload) =>
+    request(`/api/modules/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  deleteModule: (id) =>
+    request(`/api/modules/${id}`, {
+      method: 'DELETE',
+    }),
   getLessons: () => request('/api/lessons'),
+  createLesson: (payload) =>
+    request('/api/lessons', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateLesson: (id, payload) =>
+    request(`/api/lessons/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  deleteLesson: (id) =>
+    request(`/api/lessons/${id}`, {
+      method: 'DELETE',
+    }),
   getEnrollments: () => request('/api/enrollments'),
+  getEnrollmentsByUser: (userId) => request(`/api/enrollments/user/${userId}`),
   getCertificates: () => request('/api/certificates'),
   getReviews: () => request('/api/reviews'),
   getComments: () => request('/api/comments'),
+  createComment: (payload) =>
+    request('/api/comments', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateComment: (id, payload) =>
+    request(`/api/comments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  deleteComment: (id) =>
+    request(`/api/comments/${id}`, {
+      method: 'DELETE',
+    }),
   getLessonProgress: () => request('/api/lesson-progress'),
+  deleteLessonProgress: (id) =>
+    request(`/api/lesson-progress/${id}`, {
+      method: 'DELETE',
+    }),
 
   createEnrollment: (payload) =>
     request('/api/enrollments', {
       method: 'POST',
       body: JSON.stringify(payload),
+    }),
+  updateEnrollmentStatus: (id, payload) =>
+    request(`/api/enrollments/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  deleteEnrollment: (id) =>
+    request(`/api/enrollments/${id}`, {
+      method: 'DELETE',
     }),
 
   upsertLessonProgress: (payload) =>

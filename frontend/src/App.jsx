@@ -14,6 +14,8 @@ import { CommentsPage } from './pages/comments/CommentsPage'
 import { LessonsPage } from './pages/lessons/LessonsPage'
 import { LessonProgressPage } from './pages/lesson-progress/LessonProgressPage'
 import { EnrollmentsPage } from './pages/enrollments/EnrollmentsPage'
+import { UsersPage } from './pages/users/UsersPage'
+import { CategoriesPage } from './pages/categories/CategoriesPage'
 
 const DEFAULT_USER = {
   id: '',
@@ -38,6 +40,16 @@ const BACKEND_RESOURCES = [
   { key: 'comments', title: 'Comentarios', endpoint: '/api/comments', icon: 'forum' },
   { key: 'certificates', title: 'Certificados', endpoint: '/api/certificates', icon: 'workspace_premium' },
 ]
+
+const DEDICATED_RESOURCE_VIEWS = new Set([
+  'users',
+  'categories',
+  'modules',
+  'comments',
+  'enrollments',
+  'lessons',
+  'lesson-progress',
+])
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true)
@@ -85,7 +97,7 @@ function App() {
 
         if (!mounted) return
 
-        const student = usersDto.find((user) => user.role === 'student') ?? usersDto[0]
+        const student = usersDto.find((user) => user.role === 'student' || user.role === 'STUDENT') ?? usersDto[0]
         if (student) {
           setAppUser({
             id: student.id,
@@ -108,7 +120,7 @@ function App() {
           setSelectedCourse((current) => mappedCourses.find((course) => course.id === current?.id) ?? mappedCourses[0])
         }
 
-        setAppCategories(['Todos', ...mappedCategories])
+        setAppCategories(['Todos', ...mappedCategories.map((category) => category.name)])
         if (mappedLessons.length > 0) {
           setAppLessons(mappedLessons)
           setActiveLesson(mappedLessons.find((lesson) => lesson.status === 'active') ?? mappedLessons[0])
@@ -153,7 +165,7 @@ function App() {
   }
 
   const markCompleted = async () => {
-    if (selectedCourse.enrollmentId && activeLesson?.id) {
+    if (selectedCourse?.enrollmentId && activeLesson?.id) {
       try {
         await api.upsertLessonProgress({
           enrollmentId: selectedCourse.enrollmentId,
@@ -163,7 +175,7 @@ function App() {
         })
         setCompletedMessage('Leccion marcada como completada en el backend.')
       } catch {
-        setCompletedMessage('No se pudo actualizar el progreso en la API. Revisa que el backend este activo.')
+        setCompletedMessage('No se pudo actualizar el progreso en la API.')
       }
     } else {
       setCompletedMessage('Leccion marcada localmente. Inscribete al curso para guardar progreso real.')
@@ -224,7 +236,7 @@ function App() {
           email: formData.get('email'),
           password: formData.get('password'),
           avatarUrl: '',
-          role: formData.get('role'),
+          role: formData.get('role').toUpperCase(),
         })
         setAppUser({
           id: createdUser.id,
@@ -284,6 +296,8 @@ function App() {
     enrollments: <EnrollmentsPage />,
     lessons: <LessonsPage />,
     'lesson-progress': <LessonProgressPage />,
+    users: <UsersPage />,
+    categories: <CategoriesPage />,
     home: (
       <HomeView
         user={appUser}
@@ -294,8 +308,6 @@ function App() {
         onOpenPlayer={openPlayer}
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
-        
-        
       />
     ),
     explore: (
@@ -330,14 +342,15 @@ function App() {
     ),
     library: <LibraryView courses={appCourses.filter((course) => course.progress > 0)} onOpenPlayer={openPlayer} />,
     certificates: <CertificatesView certificates={appCertificates} />,
+    profile: <ProfileView user={appUser} courses={appCourses} certificates={appCertificates} />,
     admin: (
       <BackendPanelView
         resources={BACKEND_RESOURCES}
         activeResourceKey={activeResourceKey}
         setActiveResourceKey={setActiveResourceKey}
+        onNavigate={setView}
       />
     ),
-    profile: <ProfileView user={appUser} courses={appCourses} certificates={appCertificates} />,
   }[view]
 
   return (
@@ -789,8 +802,9 @@ function ProfileView({ user, courses, certificates }) {
   )
 }
 
-function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey }) {
+function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey, onNavigate }) {
   const activeResource = resources.find((resource) => resource.key === activeResourceKey) ?? resources[0]
+  const hasDedicatedView = DEDICATED_RESOURCE_VIEWS.has(activeResource.key)
 
   return (
     <main className="page">
@@ -808,7 +822,12 @@ function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey }
             className={resource.key === activeResource.key ? 'backend-resource-card active' : 'backend-resource-card'}
             type="button"
             key={resource.key}
-            onClick={() => setActiveResourceKey(resource.key)}
+            onClick={() => {
+              setActiveResourceKey(resource.key)
+              if (resource.key === 'users' || resource.key === 'categories') {
+                onNavigate(resource.key)
+              }
+            }}
           >
             <Icon name={resource.icon} />
             <strong>{resource.title}</strong>
@@ -824,6 +843,12 @@ function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey }
             <h2>{activeResource.title}</h2>
             <p>Gestiona este recurso desde su pagina dedicada en el menu lateral.</p>
           </div>
+          {hasDedicatedView ? (
+            <Button onClick={() => onNavigate(activeResource.key)}>
+              <Icon name="open_in_new" />
+              Abrir Gestion Real
+            </Button>
+          ) : null}
         </div>
       </section>
 

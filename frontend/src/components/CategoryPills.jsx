@@ -1,4 +1,9 @@
 export function CategoryPills({ categories, activeCategory = 'Todos', onSelect }) {
+  const visibleCategories = categories.filter((category) => {
+    const label = typeof category === 'string' ? category : category.name
+    return label && label !== 'Todos'
+  })
+
   return (
     <div className="pill-row">
       {onSelect ? (
@@ -10,16 +15,21 @@ export function CategoryPills({ categories, activeCategory = 'Todos', onSelect }
           Todos
         </button>
       ) : null}
-      {categories.map((category) => (
-        <button
-          className={activeCategory === category ? 'pill active' : 'pill'}
-          type="button"
-          key={category}
-          onClick={() => onSelect?.(category)}
-        >
-          {category}
-        </button>
-      ))}
+      {visibleCategories.map((category) => {
+        const label = typeof category === 'string' ? category : category.name
+        const value = typeof category === 'string' ? category : category.name
+
+        return (
+          <button
+            className={activeCategory === value ? 'pill active' : 'pill'}
+            type="button"
+            key={typeof category === 'string' ? category : category.id ?? category.slug ?? category.name}
+            onClick={() => onSelect?.(value)}
+          >
+            {label}
+          </button>
+        )
+      })}
     </div>
   )
 }

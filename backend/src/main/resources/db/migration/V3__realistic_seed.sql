@@ -13,29 +13,29 @@ TRUNCATE TABLE users, categories CASCADE;
 INSERT INTO users (first_name, last_name, email, password_hash, role, avatar_url) VALUES
 
   -- Admin
-  ('Admin', 'System',
+  ('Administrador', 'Sistema',
    'admin@aprende.ues',
    '$2b$12$LWiGpfHT3Y5mP9tD8bX6OuXxJ7ZMT4RkQ2dN1pV3sW8aK0cE5uYrA',
    'admin', NULL),
 
   -- Instructors
-  ('Sofia',  'Ramirez',
+  ('Sofía',  'Ramírez',
    'sofia.ramirez@aprende.ues',
    '$2b$12$rI9TJwuRvJN.mExN5qKT8eQM4DRHKxT.UuBTONaJ5EtMk5CfBUwt6',
    'instructor', 'https://i.pravatar.cc/150?u=sofia.ramirez'),
 
-  ('Diego', 'Martinez',
+  ('Diego', 'Martínez',
    'diego.martinez@aprende.ues',
    '$2b$12$9vX3Kp7mL4qN2cA8hR5tOeYjW1bF6sD0uI9nE7wG4kM3zQ2cX1pUo',
    'instructor', 'https://i.pravatar.cc/150?u=diego.martinez'),
 
-  ('Ana', 'Gutierrez',
+  ('Ana', 'Gutiérrez',
    'ana.gutierrez@aprende.ues',
    '$2b$12$hJ4mK9pL2nQ8cV5bA7xO3eWrT6sD1uY0fI8gN5kM4zQ3cX2pRoV1w',
    'instructor', 'https://i.pravatar.cc/150?u=ana.gutierrez'),
 
   -- Students
-  ('Carlos',  'Lopez',
+  ('Carlos',  'López',
    'carlos.lopez@aprende.ues',
    '$2b$12$yT8nJ3kM5pL7qO2cA9xR4eWbV1sD6uI0fN9gE8wG5kM4zQ2cX1pU',
    'student', 'https://i.pravatar.cc/150?u=carlos.lopez'),
@@ -45,12 +45,12 @@ INSERT INTO users (first_name, last_name, email, password_hash, role, avatar_url
    '$2b$12$wR6mK4pJ2nQ7cV8bA5xO1eWrT3sD9uY2fI0gN8kM5zQ4cX3pRoV2',
    'student', 'https://i.pravatar.cc/150?u=andrea.torres'),
 
-  ('Miguel', 'Hernandez',
+  ('Miguel', 'Hernández',
    'miguel.hernandez@aprende.ues',
    '$2b$12$uP5mJ2kL4nQ6cV7bA3xO8eWrT2sD0uY1fI9gN7kM3zQ1cX2pRoV3',
    'student', 'https://i.pravatar.cc/150?u=miguel.hernandez'),
 
-  ('Laura', 'Sanchez',
+  ('Laura', 'Sánchez',
    'laura.sanchez@aprende.ues',
    '$2b$12$tO4mI1kJ3nQ5cV6bA2xO7eWrT1sD8uY0fI6gN5kM2zQ0cX1pRoV4',
    'student', 'https://i.pravatar.cc/150?u=laura.sanchez'),
@@ -64,26 +64,26 @@ INSERT INTO users (first_name, last_name, email, password_hash, role, avatar_url
 -- CATEGORIES  (3 root · 4 sub)
 -- ============================================================
 INSERT INTO categories (name, slug, description) VALUES
-  ('Programming',  'programming',  'Software development and coding courses'),
-  ('Design',       'design',       'Visual design, UX, and creative courses'),
-  ('Data Science', 'data-science', 'Data analysis, machine learning, and statistics');
+  ('Programación',  'programacion',  'Cursos de desarrollo de software y programación'),
+  ('Diseño',       'diseno',       'Cursos de diseño visual, experiencia de usuario y creatividad'),
+  ('Ciencia de Datos', 'ciencia-datos', 'Análisis de datos, aprendizaje automático y estadística');
 
 INSERT INTO categories (name, slug, description, parent_id) VALUES
-  ('Frontend Development', 'frontend',
-   'HTML, CSS, JavaScript, and modern frameworks',
-   (SELECT id FROM categories WHERE slug = 'programming')),
+  ('Desarrollo Frontend', 'frontend',
+   'HTML, CSS, JavaScript y frameworks modernos',
+   (SELECT id FROM categories WHERE slug = 'programacion')),
 
-  ('Backend Development', 'backend',
-   'Servers, REST APIs, databases, and DevOps',
-   (SELECT id FROM categories WHERE slug = 'programming')),
+  ('Desarrollo Backend', 'backend',
+   'Servidores, APIs REST, bases de datos y DevOps',
+   (SELECT id FROM categories WHERE slug = 'programacion')),
 
-  ('UX / UI Design', 'ux-ui',
-   'User experience research, wireframing, and prototyping',
-   (SELECT id FROM categories WHERE slug = 'design')),
+  ('Diseño UX / UI', 'ux-ui',
+   'Investigación de experiencia de usuario, wireframes y prototipos',
+   (SELECT id FROM categories WHERE slug = 'diseno')),
 
-  ('Machine Learning', 'machine-learning',
-   'ML algorithms, deep learning, and AI applications',
-   (SELECT id FROM categories WHERE slug = 'data-science'));
+  ('Aprendizaje Automático', 'aprendizaje-automatico',
+   'Algoritmos de aprendizaje automático, aprendizaje profundo y aplicaciones de IA',
+   (SELECT id FROM categories WHERE slug = 'ciencia-datos'));
 
 -- ============================================================
 -- COURSES  (5 published · 1 draft)
@@ -91,8 +91,8 @@ INSERT INTO categories (name, slug, description, parent_id) VALUES
 INSERT INTO courses (title, description, thumbnail_url, level, status, instructor_id, category_id) VALUES
 
   (
-    'HTML & CSS Fundamentals',
-    'Learn the building blocks of the web. Master HTML structure and CSS styling to create beautiful, responsive pages from scratch. By the end you will deploy a real portfolio site.',
+    'Fundamentos de HTML y CSS',
+    'Aprende las bases de la web. Domina la estructura HTML y los estilos CSS para crear páginas atractivas y responsivas desde cero. Al final publicarás un portafolio real.',
     'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=800',
     'beginner', 'published',
     (SELECT id FROM users WHERE email = 'sofia.ramirez@aprende.ues'),
@@ -100,8 +100,8 @@ INSERT INTO courses (title, description, thumbnail_url, level, status, instructo
   ),
 
   (
-    'JavaScript from Zero to Hero',
-    'Go from complete beginner to confident JS developer. Cover variables, functions, DOM manipulation, async programming, and finish with a real-world project consuming a public API.',
+    'JavaScript desde Cero hasta Experto',
+    'Pasa de principiante absoluto a desarrollar con confianza en JavaScript. Estudia variables, funciones, manipulación del DOM, programación asíncrona y termina con un proyecto real que consume una API pública.',
     'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=800',
     'beginner', 'published',
     (SELECT id FROM users WHERE email = 'sofia.ramirez@aprende.ues'),
@@ -109,8 +109,8 @@ INSERT INTO courses (title, description, thumbnail_url, level, status, instructo
   ),
 
   (
-    'React: Building Modern Interfaces',
-    'Master React 18 with hooks, context, and React Router. Build three complete apps — a task manager, a weather dashboard, and a social feed — all connected to real APIs.',
+    'React: Construcción de Interfaces Modernas',
+    'Domina React 18 con hooks, context y React Router. Construye tres aplicaciones completas: un gestor de tareas, un panel del clima y un feed social, todas conectadas a APIs reales.',
     'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800',
     'intermediate', 'published',
     (SELECT id FROM users WHERE email = 'sofia.ramirez@aprende.ues'),
@@ -118,17 +118,17 @@ INSERT INTO courses (title, description, thumbnail_url, level, status, instructo
   ),
 
   (
-    'Python for Data Analysis',
-    'Learn Python, pandas, and Matplotlib to explore, clean, and visualize real datasets. No prior programming experience needed — start from scratch and build a complete data dashboard.',
+    'Python para Análisis de Datos',
+    'Aprende Python, pandas y Matplotlib para explorar, limpiar y visualizar conjuntos de datos reales. No necesitas experiencia previa en programación: empieza desde cero y construye un panel completo de datos.',
     'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800',
     'beginner', 'published',
     (SELECT id FROM users WHERE email = 'diego.martinez@aprende.ues'),
-    (SELECT id FROM categories WHERE slug = 'data-science')
+    (SELECT id FROM categories WHERE slug = 'ciencia-datos')
   ),
 
   (
-    'UX Design Fundamentals',
-    'Understand user-centered design from research to high-fidelity prototype. Practice design thinking, wireframing in Figma, and usability testing with real participants.',
+    'Fundamentos de Diseño UX',
+    'Comprende el diseño centrado en usuarios desde la investigación hasta el prototipo de alta fidelidad. Practica design thinking, wireframes en Figma y pruebas de usabilidad con participantes reales.',
     'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800',
     'beginner', 'published',
     (SELECT id FROM users WHERE email = 'ana.gutierrez@aprende.ues'),
@@ -136,8 +136,8 @@ INSERT INTO courses (title, description, thumbnail_url, level, status, instructo
   ),
 
   (
-    'REST APIs with Node.js & Express',
-    'Design and build production-ready REST APIs. Cover routing, middleware, JWT authentication, input validation, error handling, and connect to a PostgreSQL database with an ORM.',
+    'APIs REST con Node.js y Express',
+    'Diseña y construye APIs REST listas para producción. Cubre rutas, middleware, autenticación JWT, validación de entradas, manejo de errores y conexión a PostgreSQL con un ORM.',
     'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800',
     'intermediate', 'draft',
     (SELECT id FROM users WHERE email = 'sofia.ramirez@aprende.ues'),
@@ -150,77 +150,77 @@ INSERT INTO courses (title, description, thumbnail_url, level, status, instructo
 
 -- Course 1: HTML & CSS Fundamentals
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Introduction to HTML', 'Understand the structure of every web page.', 1, TRUE
-FROM courses WHERE title = 'HTML & CSS Fundamentals';
+SELECT id, 'Introducción a HTML', 'Comprende la estructura de toda página web.', 1, TRUE
+FROM courses WHERE title = 'Fundamentos de HTML y CSS';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Styling with CSS', 'Make your pages look great with selectors, the box model, Flexbox, and Grid.', 2, TRUE
-FROM courses WHERE title = 'HTML & CSS Fundamentals';
+SELECT id, 'Estilos con CSS', 'Haz que tus páginas se vean bien usando selectores, modelo de caja, Flexbox y Grid.', 2, TRUE
+FROM courses WHERE title = 'Fundamentos de HTML y CSS';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Building a Real Project', 'Put everything together and ship a responsive portfolio site.', 3, TRUE
-FROM courses WHERE title = 'HTML & CSS Fundamentals';
+SELECT id, 'Construcción de un Proyecto Real', 'Integra todo y publica un portafolio responsivo.', 3, TRUE
+FROM courses WHERE title = 'Fundamentos de HTML y CSS';
 
 -- Course 2: JavaScript from Zero to Hero
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'JS Fundamentals', 'Variables, data types, operators, and control flow.', 1, TRUE
-FROM courses WHERE title = 'JavaScript from Zero to Hero';
+SELECT id, 'Fundamentos de JavaScript', 'Variables, tipos de datos, operadores y flujo de control.', 1, TRUE
+FROM courses WHERE title = 'JavaScript desde Cero hasta Experto';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Working with Data', 'Arrays, objects, destructuring, and the spread operator.', 2, TRUE
-FROM courses WHERE title = 'JavaScript from Zero to Hero';
+SELECT id, 'Trabajo con Datos', 'Arreglos, objetos, destructuring y operador spread.', 2, TRUE
+FROM courses WHERE title = 'JavaScript desde Cero hasta Experto';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'The DOM and Async JS', 'Manipulate the DOM, handle events, and fetch data from APIs.', 3, TRUE
-FROM courses WHERE title = 'JavaScript from Zero to Hero';
+SELECT id, 'El DOM y JavaScript Asíncrono', 'Manipula el DOM, maneja eventos y consume datos desde APIs.', 3, TRUE
+FROM courses WHERE title = 'JavaScript desde Cero hasta Experto';
 
 -- Course 3: React
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'React Core Concepts', 'JSX, components, props, and state with useState.', 1, TRUE
-FROM courses WHERE title = 'React: Building Modern Interfaces';
+SELECT id, 'Conceptos Principales de React', 'JSX, componentes, props y estado con useState.', 1, TRUE
+FROM courses WHERE title = 'React: Construcción de Interfaces Modernas';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Hooks and Side Effects', 'useEffect, custom hooks, and global state with useContext.', 2, TRUE
-FROM courses WHERE title = 'React: Building Modern Interfaces';
+SELECT id, 'Hooks y Efectos Secundarios', 'useEffect, hooks personalizados y estado global con useContext.', 2, TRUE
+FROM courses WHERE title = 'React: Construcción de Interfaces Modernas';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Building a Full App', 'React Router, API integration, and the final capstone project.', 3, TRUE
-FROM courses WHERE title = 'React: Building Modern Interfaces';
+SELECT id, 'Construcción de una Aplicación Completa', 'React Router, integración con API y proyecto final integrador.', 3, TRUE
+FROM courses WHERE title = 'React: Construcción de Interfaces Modernas';
 
 -- Course 4: Python for Data Analysis
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Python Essentials', 'Syntax, data types, lists, dicts, functions, and modules.', 1, TRUE
-FROM courses WHERE title = 'Python for Data Analysis';
+SELECT id, 'Esenciales de Python', 'Sintaxis, tipos de datos, listas, diccionarios, funciones y módulos.', 1, TRUE
+FROM courses WHERE title = 'Python para Análisis de Datos';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Data Analysis with pandas', 'DataFrames, data cleaning, grouping, and aggregation.', 2, TRUE
-FROM courses WHERE title = 'Python for Data Analysis';
+SELECT id, 'Análisis de Datos con pandas', 'DataFrames, limpieza de datos, agrupamiento y agregación.', 2, TRUE
+FROM courses WHERE title = 'Python para Análisis de Datos';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Data Visualization', 'Charts with Matplotlib and Seaborn, and building a dashboard.', 3, TRUE
-FROM courses WHERE title = 'Python for Data Analysis';
+SELECT id, 'Visualización de Datos', 'Gráficas con Matplotlib y Seaborn, y construcción de un panel de datos.', 3, TRUE
+FROM courses WHERE title = 'Python para Análisis de Datos';
 
 -- Course 5: UX Design
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Design Thinking', 'Empathy, define, ideate — the first three phases of design thinking.', 1, TRUE
-FROM courses WHERE title = 'UX Design Fundamentals';
+SELECT id, 'Pensamiento de Diseño', 'Empatizar, definir e idear: las primeras tres fases del pensamiento de diseño.', 1, TRUE
+FROM courses WHERE title = 'Fundamentos de Diseño UX';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Wireframing & Prototyping', 'From paper sketches to interactive Figma prototypes.', 2, TRUE
-FROM courses WHERE title = 'UX Design Fundamentals';
+SELECT id, 'Wireframes y Prototipado', 'Desde bocetos en papel hasta prototipos interactivos en Figma.', 2, TRUE
+FROM courses WHERE title = 'Fundamentos de Diseño UX';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Usability Testing', 'Plan, run, and analyze usability tests with real users.', 3, TRUE
-FROM courses WHERE title = 'UX Design Fundamentals';
+SELECT id, 'Pruebas de Usabilidad', 'Planifica, ejecuta y analiza pruebas de usabilidad con usuarios reales.', 3, TRUE
+FROM courses WHERE title = 'Fundamentos de Diseño UX';
 
 -- Course 6: Node.js (DRAFT — modules not published)
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Node.js Basics', 'The event loop, npm, and your first HTTP server.', 1, FALSE
-FROM courses WHERE title = 'REST APIs with Node.js & Express';
+SELECT id, 'Bases de Node.js', 'El event loop, npm y tu primer servidor HTTP.', 1, FALSE
+FROM courses WHERE title = 'APIs REST con Node.js y Express';
 
 INSERT INTO modules (course_id, title, description, position, is_published)
-SELECT id, 'Express.js', 'Routing, middleware, error handling, and request validation.', 2, FALSE
-FROM courses WHERE title = 'REST APIs with Node.js & Express';
+SELECT id, 'Express.js', 'Rutas, middleware, manejo de errores y validación de solicitudes.', 2, FALSE
+FROM courses WHERE title = 'APIs REST con Node.js y Express';
 
 -- ============================================================
 -- LESSONS
@@ -232,459 +232,459 @@ FROM courses WHERE title = 'REST APIs with Node.js & Express';
 -- Module: Introduction to HTML
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'How the Web Works',
-       'Browsers, servers, HTTP requests — understand what happens when you visit a URL.',
+       'Cómo Funciona la Web',
+       'Navegadores, servidores y solicitudes HTTP: comprende qué ocurre cuando visitas una URL.',
        'https://www.youtube.com/embed/hJHvdBlSxug', 540, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Introduction to HTML';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Introducción a HTML';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Your First HTML Document',
-       'Create a valid HTML5 file from scratch: doctype, head, body, and your first tags.',
+       'Tu Primer Documento HTML',
+       'Crea desde cero un archivo HTML5 válido: doctype, head, body y tus primeras etiquetas.',
        'https://www.youtube.com/embed/UB1O30fR-EE', 780, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Introduction to HTML';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Introducción a HTML';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Semantic HTML Elements',
-       'Replace generic divs with header, nav, main, section, article, and footer.',
+       'Elementos Semánticos de HTML',
+       'Reemplaza divs genéricos con header, nav, main, section, article y footer.',
        'https://www.youtube.com/embed/kGW8Al_cga4', 900, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Introduction to HTML';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Introducción a HTML';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'HTML Forms and Inputs',
-       'Build accessible forms with text, email, select, checkbox, radio, and textarea.',
+       'Formularios y Campos en HTML',
+       'Construye formularios accesibles con text, email, select, checkbox, radio y textarea.',
        'https://www.youtube.com/embed/fNcJuPIZ2WE', 1080, 4, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Introduction to HTML';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Introducción a HTML';
 
 -- Module: Styling with CSS
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'CSS Selectors and Specificity',
-       'Class, ID, attribute, pseudo-class, and pseudo-element selectors — and how specificity resolves conflicts.',
+       'Selectores y Especificidad en CSS',
+       'Selectores de clase, ID, atributo, pseudo-clase y pseudo-elemento, y cómo la especificidad resuelve conflictos.',
        'https://www.youtube.com/embed/l1mER1bV0N0', 660, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Styling with CSS';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Estilos con CSS';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'The Box Model',
-       'Master content, padding, border, and margin. Understand box-sizing: border-box.',
+       'El Modelo de Caja',
+       'Domina contenido, relleno, borde y margen. Comprende box-sizing: border-box.',
        'https://www.youtube.com/embed/rIO5326FgPE', 840, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Styling with CSS';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Estilos con CSS';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Flexbox Layout',
-       'Align and distribute elements in one dimension with display:flex, gap, align-items, and justify-content.',
+       'Diseño con Flexbox',
+       'Alinea y distribuye elementos en una dimensión con display:flex, gap, align-items y justify-content.',
        'https://www.youtube.com/embed/phWxA89Dy94', 1200, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Styling with CSS';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Estilos con CSS';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'CSS Grid Layout',
-       'Build two-dimensional layouts with grid-template-columns, grid-template-rows, and grid areas.',
+       'Diseño con CSS Grid',
+       'Construye diseños bidimensionales con grid-template-columns, grid-template-rows y áreas de grid.',
        'https://www.youtube.com/embed/jV8B24rSN5o', 1380, 4, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Styling with CSS';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Estilos con CSS';
 
 -- Module: Building a Real Project
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Planning Your Portfolio',
-       'Wireframe your layout on paper, define your color palette and typography before writing a single line of code.',
+       'Planificación de tu Portafolio',
+       'Dibuja tu layout en papel y define paleta de colores y tipografía antes de escribir código.',
        NULL, 360, 1, 'article', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Building a Real Project';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Construcción de un Proyecto Real';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Building the Portfolio Page',
-       'Code the full portfolio live: header, hero, projects grid, and contact section.',
+       'Construcción de la Página de Portafolio',
+       'Programa el portafolio completo: encabezado, hero, grid de proyectos y sección de contacto.',
        'https://www.youtube.com/embed/r_hYR53r61M', 2400, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Building a Real Project';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Construcción de un Proyecto Real';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Making It Responsive',
-       'Add media queries so your portfolio looks great on mobile, tablet, and desktop.',
+       'Haciéndolo Responsivo',
+       'Agrega media queries para que tu portafolio se vea bien en móvil, tablet y escritorio.',
        'https://www.youtube.com/embed/bn-DQznsbIMk', 1080, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'HTML & CSS Fundamentals' AND m.title = 'Building a Real Project';
+WHERE c.title = 'Fundamentos de HTML y CSS' AND m.title = 'Construcción de un Proyecto Real';
 
 -- ── Course 2: JavaScript from Zero to Hero ───────────────────
 
 -- Module: JS Fundamentals
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Variables and Data Types',
-       'var vs let vs const, primitive types, typeof, and type coercion.',
+       'Variables y Tipos de Datos',
+       'var vs let vs const, tipos primitivos, typeof y conversión de tipos.',
        'https://www.youtube.com/embed/hdI2bqOjy3c', 780, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'JavaScript from Zero to Hero' AND m.title = 'JS Fundamentals';
+WHERE c.title = 'JavaScript desde Cero hasta Experto' AND m.title = 'Fundamentos de JavaScript';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Control Flow and Loops',
-       'if/else, switch, ternary, for, while, and for...of — decide and repeat.',
+       'Flujo de Control y Bucles',
+       'if/else, switch, ternario, for, while y for...of: decide y repite.',
        'https://www.youtube.com/embed/IsG4Xd6LlsM', 900, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'JavaScript from Zero to Hero' AND m.title = 'JS Fundamentals';
+WHERE c.title = 'JavaScript desde Cero hasta Experto' AND m.title = 'Fundamentos de JavaScript';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Functions and Scope',
-       'Declarations, expressions, arrow functions, default parameters, closures, and the call stack.',
+       'Funciones y Alcance',
+       'Declaraciones, expresiones, funciones flecha, parámetros por defecto, closures y call stack.',
        'https://www.youtube.com/embed/gigtS_5KKas', 1080, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'JavaScript from Zero to Hero' AND m.title = 'JS Fundamentals';
+WHERE c.title = 'JavaScript desde Cero hasta Experto' AND m.title = 'Fundamentos de JavaScript';
 
 -- Module: Working with Data
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Arrays and Array Methods',
-       'map, filter, reduce, find, some, every — functional array manipulation.',
+       'Arreglos y Métodos de Arreglos',
+       'map, filter, reduce, find, some y every: manipulación funcional de arreglos.',
        'https://www.youtube.com/embed/R8rmfD9Y5-c', 1080, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'JavaScript from Zero to Hero' AND m.title = 'Working with Data';
+WHERE c.title = 'JavaScript desde Cero hasta Experto' AND m.title = 'Trabajo con Datos';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Objects and JSON',
-       'Object literals, dot vs bracket notation, methods, and JSON.parse / JSON.stringify.',
+       'Objetos y JSON',
+       'Objetos literales, notación de punto vs corchetes, métodos y JSON.parse / JSON.stringify.',
        'https://www.youtube.com/embed/_5jdE6imZ9o', 960, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'JavaScript from Zero to Hero' AND m.title = 'Working with Data';
+WHERE c.title = 'JavaScript desde Cero hasta Experto' AND m.title = 'Trabajo con Datos';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Destructuring and Spread',
-       'Unpack arrays and objects, use rest parameters, and compose data with the spread operator.',
+       'Destructuring y Spread',
+       'Desempaqueta arreglos y objetos, usa parámetros rest y compone datos con el operador spread.',
        'https://www.youtube.com/embed/NIq3qLaHCIs', 840, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'JavaScript from Zero to Hero' AND m.title = 'Working with Data';
+WHERE c.title = 'JavaScript desde Cero hasta Experto' AND m.title = 'Trabajo con Datos';
 
 -- Module: The DOM and Async JS
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'DOM Selection and Manipulation',
-       'querySelector, innerHTML, classList, style, createElement, and appendChild.',
+       'Selección y Manipulación del DOM',
+       'querySelector, innerHTML, classList, style, createElement y appendChild.',
        'https://www.youtube.com/embed/0ik6X4DJKCc', 1080, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'JavaScript from Zero to Hero' AND m.title = 'The DOM and Async JS';
+WHERE c.title = 'JavaScript desde Cero hasta Experto' AND m.title = 'El DOM y JavaScript Asíncrono';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Events and Event Listeners',
-       'addEventListener, event delegation, preventDefault, stopPropagation, and keyboard events.',
+       'Eventos y Event Listeners',
+       'addEventListener, delegación de eventos, preventDefault, stopPropagation y eventos de teclado.',
        'https://www.youtube.com/embed/XF1_MlZ5l6M', 900, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'JavaScript from Zero to Hero' AND m.title = 'The DOM and Async JS';
+WHERE c.title = 'JavaScript desde Cero hasta Experto' AND m.title = 'El DOM y JavaScript Asíncrono';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Promises and Async/Await',
-       'The event loop, callbacks, Promise chains, and cleaner async code with async/await.',
+       'Promesas y Async/Await',
+       'Event loop, callbacks, cadenas de promesas y código asíncrono más limpio con async/await.',
        'https://www.youtube.com/embed/PoRJizFvM7s', 1320, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'JavaScript from Zero to Hero' AND m.title = 'The DOM and Async JS';
+WHERE c.title = 'JavaScript desde Cero hasta Experto' AND m.title = 'El DOM y JavaScript Asíncrono';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Fetching Data with the Fetch API',
-       'GET and POST requests, handling JSON responses, error handling, and building a live weather app.',
+       'Obtención de Datos con Fetch API',
+       'Solicitudes GET y POST, manejo de respuestas JSON, manejo de errores y construcción de una app del clima en vivo.',
        'https://www.youtube.com/embed/cuEtnrL9-H0', 1200, 4, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'JavaScript from Zero to Hero' AND m.title = 'The DOM and Async JS';
+WHERE c.title = 'JavaScript desde Cero hasta Experto' AND m.title = 'El DOM y JavaScript Asíncrono';
 
 -- ── Course 3: React ───────────────────────────────────────────
 
 -- Module: React Core Concepts
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Why React and How It Works',
-       'The virtual DOM, reconciliation, and why component-based UIs win at scale.',
+       'Por Qué React y Cómo Funciona',
+       'El DOM virtual, la reconciliación y por qué las interfaces basadas en componentes escalan mejor.',
        'https://www.youtube.com/embed/Tn6-PIqc4UM', 660, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'React: Building Modern Interfaces' AND m.title = 'React Core Concepts';
+WHERE c.title = 'React: Construcción de Interfaces Modernas' AND m.title = 'Conceptos Principales de React';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'JSX and Your First Component',
-       'Write JSX, understand the rules, create functional components, and pass props.',
+       'JSX y tu Primer Componente',
+       'Escribe JSX, comprende las reglas, crea componentes funcionales y pasa props.',
        'https://www.youtube.com/embed/w7ejDZ8SWv8', 1200, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'React: Building Modern Interfaces' AND m.title = 'React Core Concepts';
+WHERE c.title = 'React: Construcción de Interfaces Modernas' AND m.title = 'Conceptos Principales de React';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'State Management with useState',
-       'Declare state, trigger re-renders, handle forms, and lift state up to parent components.',
+       'Manejo de Estado con useState',
+       'Declara estado, dispara renderizados, maneja formularios y eleva estado a componentes padre.',
        'https://www.youtube.com/embed/O6P86uwfdR0', 1500, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'React: Building Modern Interfaces' AND m.title = 'React Core Concepts';
+WHERE c.title = 'React: Construcción de Interfaces Modernas' AND m.title = 'Conceptos Principales de React';
 
 -- Module: Hooks and Side Effects
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'useEffect and the Component Lifecycle',
-       'Run side effects on mount, update, and unmount — fetch data, set timers, subscribe to events.',
+       'useEffect y el Ciclo de Vida del Componente',
+       'Ejecuta efectos al montar, actualizar y desmontar: consulta datos, configura temporizadores y suscríbete a eventos.',
        'https://www.youtube.com/embed/0ZJgIjIuY7U', 1200, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'React: Building Modern Interfaces' AND m.title = 'Hooks and Side Effects';
+WHERE c.title = 'React: Construcción de Interfaces Modernas' AND m.title = 'Hooks y Efectos Secundarios';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Building Custom Hooks',
-       'Extract and reuse stateful logic across components with your own useFetch and useLocalStorage hooks.',
+       'Construcción de Hooks Personalizados',
+       'Extrae y reutiliza lógica con estado entre componentes usando tus propios hooks useFetch y useLocalStorage.',
        'https://www.youtube.com/embed/6ThXsUwLWvc', 1080, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'React: Building Modern Interfaces' AND m.title = 'Hooks and Side Effects';
+WHERE c.title = 'React: Construcción de Interfaces Modernas' AND m.title = 'Hooks y Efectos Secundarios';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Global State with useContext',
-       'Avoid prop drilling by creating a context, a provider, and consuming it with useContext.',
+       'Estado Global con useContext',
+       'Evita prop drilling creando un contexto, un provider y consumiéndolo con useContext.',
        'https://www.youtube.com/embed/5LrDIWkK_Bc', 1320, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'React: Building Modern Interfaces' AND m.title = 'Hooks and Side Effects';
+WHERE c.title = 'React: Construcción de Interfaces Modernas' AND m.title = 'Hooks y Efectos Secundarios';
 
 -- Module: Building a Full App
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Client-Side Routing with React Router',
-       'Define routes, use Link and NavLink, read URL params, and protect private routes.',
+       'Rutas del Cliente con React Router',
+       'Define rutas, usa Link y NavLink, lee parámetros de URL y protege rutas privadas.',
        'https://www.youtube.com/embed/59IXY5IDrBA', 1260, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'React: Building Modern Interfaces' AND m.title = 'Building a Full App';
+WHERE c.title = 'React: Construcción de Interfaces Modernas' AND m.title = 'Construcción de una Aplicación Completa';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Connecting to a REST API',
-       'Fetch, display, and paginate data from a real API. Handle loading and error states gracefully.',
+       'Conexión a una API REST',
+       'Consulta, muestra y pagina datos desde una API real. Maneja estados de carga y error correctamente.',
        'https://www.youtube.com/embed/dtKciwk_si4', 1080, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'React: Building Modern Interfaces' AND m.title = 'Building a Full App';
+WHERE c.title = 'React: Construcción de Interfaces Modernas' AND m.title = 'Construcción de una Aplicación Completa';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Capstone: Full Social Feed App',
-       'Build a complete social feed with authentication, posts, likes, and comments — fully integrated with the backend.',
+       'Proyecto Final: Aplicación Completa de Feed Social',
+       'Construye un feed social completo con autenticación, publicaciones, likes y comentarios, integrado con el backend.',
        'https://www.youtube.com/embed/b9eMGE7QtTk', 3600, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'React: Building Modern Interfaces' AND m.title = 'Building a Full App';
+WHERE c.title = 'React: Construcción de Interfaces Modernas' AND m.title = 'Construcción de una Aplicación Completa';
 
 -- ── Course 4: Python for Data Analysis ───────────────────────
 
 -- Module: Python Essentials
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Python Syntax and Data Types',
-       'Strings, integers, floats, booleans, and None. Variables, print, and input.',
+       'Sintaxis de Python y Tipos de Datos',
+       'Cadenas, enteros, flotantes, booleanos y None. Variables, print e input.',
        'https://www.youtube.com/embed/_uQrJ0TkZlc', 960, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'Python for Data Analysis' AND m.title = 'Python Essentials';
+WHERE c.title = 'Python para Análisis de Datos' AND m.title = 'Esenciales de Python';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Lists, Tuples, and Dictionaries',
-       'Create, index, slice, and iterate over Python collections. Understand mutability.',
+       'Listas, Tuplas y Diccionarios',
+       'Crea, indexa, corta e itera colecciones de Python. Comprende la mutabilidad.',
        'https://www.youtube.com/embed/W8KRzm-HUcc', 1080, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'Python for Data Analysis' AND m.title = 'Python Essentials';
+WHERE c.title = 'Python para Análisis de Datos' AND m.title = 'Esenciales de Python';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Functions and Modules',
-       'Define reusable functions, use *args and **kwargs, import from the standard library.',
+       'Funciones y Módulos',
+       'Define funciones reutilizables, usa *args y **kwargs e importa desde la biblioteca estándar.',
        'https://www.youtube.com/embed/9Os0o3wzS_I', 900, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'Python for Data Analysis' AND m.title = 'Python Essentials';
+WHERE c.title = 'Python para Análisis de Datos' AND m.title = 'Esenciales de Python';
 
 -- Module: Data Analysis with pandas
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Introduction to pandas DataFrames',
-       'Load CSV and JSON files, inspect shape, dtypes, head, describe, and info.',
+       'Introducción a DataFrames de pandas',
+       'Carga archivos CSV y JSON, inspecciona shape, dtypes, head, describe e info.',
        'https://www.youtube.com/embed/vmEHCJofslg', 1260, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'Python for Data Analysis' AND m.title = 'Data Analysis with pandas';
+WHERE c.title = 'Python para Análisis de Datos' AND m.title = 'Análisis de Datos con pandas';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Cleaning and Transforming Data',
-       'Handle missing values, rename columns, change dtypes, and apply custom functions.',
+       'Limpieza y Transformación de Datos',
+       'Maneja valores faltantes, renombra columnas, cambia dtypes y aplica funciones personalizadas.',
        'https://www.youtube.com/embed/bDhvCp3_lYw', 1500, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'Python for Data Analysis' AND m.title = 'Data Analysis with pandas';
+WHERE c.title = 'Python para Análisis de Datos' AND m.title = 'Análisis de Datos con pandas';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Grouping and Aggregation',
-       'groupby, pivot tables, merge, and concat — answer real business questions from data.',
+       'Agrupamiento y Agregación',
+       'groupby, tablas dinámicas, merge y concat: responde preguntas reales de negocio con datos.',
        'https://www.youtube.com/embed/Wb2Tp35dZ-I', 1200, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'Python for Data Analysis' AND m.title = 'Data Analysis with pandas';
+WHERE c.title = 'Python para Análisis de Datos' AND m.title = 'Análisis de Datos con pandas';
 
 -- Module: Data Visualization
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Matplotlib Basics',
-       'Line, bar, scatter, and histogram charts. Customize titles, axes, colors, and legends.',
+       'Bases de Matplotlib',
+       'Gráficas de línea, barras, dispersión e histogramas. Personaliza títulos, ejes, colores y leyendas.',
        'https://www.youtube.com/embed/3Xc3CA655Y4', 960, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'Python for Data Analysis' AND m.title = 'Data Visualization';
+WHERE c.title = 'Python para Análisis de Datos' AND m.title = 'Visualización de Datos';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Beautiful Charts with Seaborn',
-       'heatmaps, pair plots, violin charts, and statistical visualizations with a single line.',
+       'Gráficas Atractivas con Seaborn',
+       'Heatmaps, pair plots, gráficas de violín y visualizaciones estadísticas con una sola línea.',
        'https://www.youtube.com/embed/6GUZXDef2U0', 1080, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'Python for Data Analysis' AND m.title = 'Data Visualization';
+WHERE c.title = 'Python para Análisis de Datos' AND m.title = 'Visualización de Datos';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Capstone: Sales Analytics Dashboard',
-       'Combine everything: load a real sales dataset, clean it, analyze it, and produce a full visual report.',
+       'Proyecto Final: Panel de Análisis de Ventas',
+       'Combina todo: carga un conjunto de ventas real, límpialo, analízalo y produce un reporte visual completo.',
        'https://www.youtube.com/embed/r-uOLxNrNk8', 2100, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'Python for Data Analysis' AND m.title = 'Data Visualization';
+WHERE c.title = 'Python para Análisis de Datos' AND m.title = 'Visualización de Datos';
 
 -- ── Course 5: UX Design Fundamentals ─────────────────────────
 
 -- Module: Design Thinking
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'What is UX Design?',
-       'UX vs UI, the UX design process, and why empathy is the most important design tool.',
+       '¿Qué es el Diseño UX?',
+       'UX vs UI, el proceso de diseño UX y por qué la empatía es la herramienta más importante del diseño.',
        'https://www.youtube.com/embed/v6n1i0qojkA', 600, 1, 'video', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'UX Design Fundamentals' AND m.title = 'Design Thinking';
+WHERE c.title = 'Fundamentos de Diseño UX' AND m.title = 'Pensamiento de Diseño';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'User Research Methods',
-       'Interviews, surveys, contextual inquiry, card sorting, and how to synthesize findings.',
+       'Métodos de Investigación de Usuarios',
+       'Entrevistas, encuestas, investigación contextual, card sorting y síntesis de hallazgos.',
        'https://www.youtube.com/embed/Ovj-ySJ0bvg', 1200, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'UX Design Fundamentals' AND m.title = 'Design Thinking';
+WHERE c.title = 'Fundamentos de Diseño UX' AND m.title = 'Pensamiento de Diseño';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Personas and User Journey Maps',
-       'Turn raw research into personas and journey maps that the whole team can act on.',
+       'Personas y Mapas de Recorrido de Usuario',
+       'Convierte investigación en personas y mapas de recorrido accionables para todo el equipo.',
        NULL, 480, 3, 'article', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'UX Design Fundamentals' AND m.title = 'Design Thinking';
+WHERE c.title = 'Fundamentos de Diseño UX' AND m.title = 'Pensamiento de Diseño';
 
 -- Module: Wireframing & Prototyping
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Sketching and Low-Fi Wireframes',
-       'Paper prototyping, Crazy 8s, and rapid ideation — fail fast before opening Figma.',
+       'Bocetos y Wireframes de Baja Fidelidad',
+       'Prototipado en papel, Crazy 8s e ideación rápida: falla rápido antes de abrir Figma.',
        NULL, 420, 1, 'article', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'UX Design Fundamentals' AND m.title = 'Wireframing & Prototyping';
+WHERE c.title = 'Fundamentos de Diseño UX' AND m.title = 'Wireframes y Prototipado';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'High-Fidelity Wireframes in Figma',
-       'Master Figma frames, auto-layout, components, and design tokens to build pixel-perfect wireframes.',
+       'Wireframes de Alta Fidelidad en Figma',
+       'Domina frames, auto-layout, componentes y tokens de diseño en Figma para crear wireframes precisos.',
        'https://www.youtube.com/embed/FTFaQWZBqQ8', 2100, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'UX Design Fundamentals' AND m.title = 'Wireframing & Prototyping';
+WHERE c.title = 'Fundamentos de Diseño UX' AND m.title = 'Wireframes y Prototipado';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Interactive Prototyping',
-       'Link frames, add transitions, create overlays, and share a clickable prototype with stakeholders.',
+       'Prototipado Interactivo',
+       'Conecta frames, agrega transiciones, crea overlays y comparte un prototipo navegable con interesados.',
        'https://www.youtube.com/embed/lTIeZ2ahEkQ', 1500, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'UX Design Fundamentals' AND m.title = 'Wireframing & Prototyping';
+WHERE c.title = 'Fundamentos de Diseño UX' AND m.title = 'Wireframes y Prototipado';
 
 -- Module: Usability Testing
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Planning a Usability Test',
-       'Write a test plan, define tasks, recruit participants, and prepare your script.',
+       'Planificación de una Prueba de Usabilidad',
+       'Escribe un plan de prueba, define tareas, recluta participantes y prepara tu guion.',
        NULL, 540, 1, 'article', TRUE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'UX Design Fundamentals' AND m.title = 'Usability Testing';
+WHERE c.title = 'Fundamentos de Diseño UX' AND m.title = 'Pruebas de Usabilidad';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Conducting User Interviews',
-       'The think-aloud protocol, note-taking, and how to avoid leading participants.',
+       'Conducción de Entrevistas con Usuarios',
+       'Protocolo de pensar en voz alta, toma de notas y cómo evitar dirigir a los participantes.',
        'https://www.youtube.com/embed/U9ZG19XTbd4', 1200, 2, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'UX Design Fundamentals' AND m.title = 'Usability Testing';
+WHERE c.title = 'Fundamentos de Diseño UX' AND m.title = 'Pruebas de Usabilidad';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Analyzing Results and Reporting',
-       'Affinity mapping, severity ratings, and presenting actionable recommendations to stakeholders.',
+       'Análisis de Resultados y Reportes',
+       'Mapeo de afinidad, niveles de severidad y presentación de recomendaciones accionables.',
        'https://www.youtube.com/embed/nYCJTea5AKg', 1080, 3, 'video', FALSE, TRUE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'UX Design Fundamentals' AND m.title = 'Usability Testing';
+WHERE c.title = 'Fundamentos de Diseño UX' AND m.title = 'Pruebas de Usabilidad';
 
 -- ── Course 6: Node.js & Express (DRAFT — not published) ──────
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Node.js Architecture and the Event Loop',
-       'Why Node is fast, how the event loop works, and when to use it.',
+       'Arquitectura de Node.js y el Event Loop',
+       'Por qué Node es rápido, cómo funciona el event loop y cuándo conviene usarlo.',
        'https://www.youtube.com/embed/8aGhZQkoFbQ', 840, 1, 'video', TRUE, FALSE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'REST APIs with Node.js & Express' AND m.title = 'Node.js Basics';
+WHERE c.title = 'APIs REST con Node.js y Express' AND m.title = 'Bases de Node.js';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'npm and Package Management',
-       'package.json, npm install, scripts, devDependencies, and semantic versioning.',
+       'npm y Gestión de Paquetes',
+       'package.json, npm install, scripts, devDependencies y versionado semántico.',
        'https://www.youtube.com/embed/jHDhaSSKmB0', 720, 2, 'video', FALSE, FALSE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'REST APIs with Node.js & Express' AND m.title = 'Node.js Basics';
+WHERE c.title = 'APIs REST con Node.js y Express' AND m.title = 'Bases de Node.js';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Your First HTTP Server',
-       'Use the built-in http module to handle GET and POST requests without any framework.',
+       'Tu Primer Servidor HTTP',
+       'Usa el módulo http integrado para manejar solicitudes GET y POST sin frameworks.',
        'https://www.youtube.com/embed/VShtPwEkDD0', 1080, 3, 'video', FALSE, FALSE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'REST APIs with Node.js & Express' AND m.title = 'Node.js Basics';
+WHERE c.title = 'APIs REST con Node.js y Express' AND m.title = 'Bases de Node.js';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Express Routing',
-       'Define routes, use route parameters and query strings, and organize routes with Router.',
+       'Rutas con Express',
+       'Define rutas, usa parámetros y query strings, y organiza rutas con Router.',
        'https://www.youtube.com/embed/L72fhGm1tfE', 1200, 1, 'video', TRUE, FALSE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'REST APIs with Node.js & Express' AND m.title = 'Express.js';
+WHERE c.title = 'APIs REST con Node.js y Express' AND m.title = 'Express.js';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Middleware and Error Handling',
-       'Write custom middleware, use morgan and cors, and build a global error handler.',
+       'Middleware y Manejo de Errores',
+       'Escribe middleware personalizado, usa morgan y cors, y construye un manejador global de errores.',
        'https://www.youtube.com/embed/lY6icfhap2o', 960, 2, 'video', FALSE, FALSE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'REST APIs with Node.js & Express' AND m.title = 'Express.js';
+WHERE c.title = 'APIs REST con Node.js y Express' AND m.title = 'Express.js';
 
 INSERT INTO lessons (module_id, title, description, video_url, duration_sec, position, type, is_preview, is_published)
 SELECT m.id,
-       'Connecting to PostgreSQL with an ORM',
-       'Set up Prisma, define a schema, run migrations, and perform CRUD operations.',
+       'Conexión a PostgreSQL con un ORM',
+       'Configura Prisma, define un esquema, ejecuta migraciones y realiza operaciones CRUD.',
        'https://www.youtube.com/embed/RebA5J-rlwg', 1500, 3, 'video', FALSE, FALSE
 FROM modules m JOIN courses c ON m.course_id = c.id
-WHERE c.title = 'REST APIs with Node.js & Express' AND m.title = 'Express.js';
+WHERE c.title = 'APIs REST con Node.js y Express' AND m.title = 'Express.js';
 
 -- ============================================================
 -- ENROLLMENTS
@@ -694,13 +694,13 @@ VALUES
   -- Carlos: HTML&CSS completed, JS active (67%)
   (
     (SELECT id FROM users WHERE email = 'carlos.lopez@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'HTML & CSS Fundamentals'),
+    (SELECT id FROM courses WHERE title = 'Fundamentos de HTML y CSS'),
     'completed', 100.00,
     NOW() - INTERVAL '45 days', NOW() - INTERVAL '10 days'
   ),
   (
     (SELECT id FROM users WHERE email = 'carlos.lopez@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'JavaScript from Zero to Hero'),
+    (SELECT id FROM courses WHERE title = 'JavaScript desde Cero hasta Experto'),
     'active', 66.67,
     NOW() - INTERVAL '8 days', NULL
   ),
@@ -708,13 +708,13 @@ VALUES
   -- Andrea: HTML&CSS active (36%), React just started
   (
     (SELECT id FROM users WHERE email = 'andrea.torres@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'HTML & CSS Fundamentals'),
+    (SELECT id FROM courses WHERE title = 'Fundamentos de HTML y CSS'),
     'active', 36.36,
     NOW() - INTERVAL '20 days', NULL
   ),
   (
     (SELECT id FROM users WHERE email = 'andrea.torres@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'React: Building Modern Interfaces'),
+    (SELECT id FROM courses WHERE title = 'React: Construcción de Interfaces Modernas'),
     'active', 0.00,
     NOW() - INTERVAL '2 days', NULL
   ),
@@ -722,7 +722,7 @@ VALUES
   -- Miguel: Python active (55%)
   (
     (SELECT id FROM users WHERE email = 'miguel.hernandez@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'Python for Data Analysis'),
+    (SELECT id FROM courses WHERE title = 'Python para Análisis de Datos'),
     'active', 55.56,
     NOW() - INTERVAL '30 days', NULL
   ),
@@ -730,7 +730,7 @@ VALUES
   -- Laura: UX completed
   (
     (SELECT id FROM users WHERE email = 'laura.sanchez@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'UX Design Fundamentals'),
+    (SELECT id FROM courses WHERE title = 'Fundamentos de Diseño UX'),
     'completed', 100.00,
     NOW() - INTERVAL '60 days', NOW() - INTERVAL '5 days'
   ),
@@ -738,13 +738,13 @@ VALUES
   -- Roberto: HTML&CSS active (72%), JS started
   (
     (SELECT id FROM users WHERE email = 'roberto.cruz@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'HTML & CSS Fundamentals'),
+    (SELECT id FROM courses WHERE title = 'Fundamentos de HTML y CSS'),
     'active', 72.73,
     NOW() - INTERVAL '25 days', NULL
   ),
   (
     (SELECT id FROM users WHERE email = 'roberto.cruz@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'JavaScript from Zero to Hero'),
+    (SELECT id FROM courses WHERE title = 'JavaScript desde Cero hasta Experto'),
     'active', 33.33,
     NOW() - INTERVAL '5 days', NULL
   );
@@ -767,7 +767,7 @@ JOIN modules     m  ON m.course_id  = c.id
 JOIN lessons     l  ON l.module_id  = m.id
 JOIN users       u  ON e.user_id    = u.id
 WHERE u.email  = 'carlos.lopez@aprende.ues'
-  AND c.title  = 'HTML & CSS Fundamentals';
+  AND c.title  = 'Fundamentos de HTML y CSS';
 
 -- Carlos — JavaScript (modules 1+2 fully done, module 3 lesson 1 in progress)
 INSERT INTO lesson_progress (enrollment_id, lesson_id, is_completed, seconds_watched, last_watched_at)
@@ -783,8 +783,8 @@ JOIN modules m ON m.course_id = c.id
 JOIN lessons l ON l.module_id = m.id
 JOIN users   u ON e.user_id   = u.id
 WHERE u.email = 'carlos.lopez@aprende.ues'
-  AND c.title = 'JavaScript from Zero to Hero'
-  AND m.title IN ('JS Fundamentals', 'Working with Data');
+  AND c.title = 'JavaScript desde Cero hasta Experto'
+  AND m.title IN ('Fundamentos de JavaScript', 'Trabajo con Datos');
 
 INSERT INTO lesson_progress (enrollment_id, lesson_id, is_completed, seconds_watched, last_watched_at)
 SELECT
@@ -799,9 +799,9 @@ JOIN modules m ON m.course_id = c.id
 JOIN lessons l ON l.module_id = m.id
 JOIN users   u ON e.user_id   = u.id
 WHERE u.email  = 'carlos.lopez@aprende.ues'
-  AND c.title  = 'JavaScript from Zero to Hero'
-  AND m.title  = 'The DOM and Async JS'
-  AND l.title  = 'DOM Selection and Manipulation';
+  AND c.title  = 'JavaScript desde Cero hasta Experto'
+  AND m.title  = 'El DOM y JavaScript Asíncrono'
+  AND l.title  = 'Selección y Manipulación del DOM';
 
 -- Andrea — HTML&CSS (module 1 all done + module 2 lesson 1 in progress)
 INSERT INTO lesson_progress (enrollment_id, lesson_id, is_completed, seconds_watched, last_watched_at)
@@ -817,8 +817,8 @@ JOIN modules m ON m.course_id = c.id
 JOIN lessons l ON l.module_id = m.id
 JOIN users   u ON e.user_id   = u.id
 WHERE u.email = 'andrea.torres@aprende.ues'
-  AND c.title = 'HTML & CSS Fundamentals'
-  AND m.title = 'Introduction to HTML';
+  AND c.title = 'Fundamentos de HTML y CSS'
+  AND m.title = 'Introducción a HTML';
 
 INSERT INTO lesson_progress (enrollment_id, lesson_id, is_completed, seconds_watched, last_watched_at)
 SELECT
@@ -833,9 +833,9 @@ JOIN modules m ON m.course_id = c.id
 JOIN lessons l ON l.module_id = m.id
 JOIN users   u ON e.user_id   = u.id
 WHERE u.email = 'andrea.torres@aprende.ues'
-  AND c.title = 'HTML & CSS Fundamentals'
-  AND m.title = 'Styling with CSS'
-  AND l.title = 'CSS Selectors and Specificity';
+  AND c.title = 'Fundamentos de HTML y CSS'
+  AND m.title = 'Estilos con CSS'
+  AND l.title = 'Selectores y Especificidad en CSS';
 
 -- Miguel — Python (modules 1+2 done, module 3 lesson 1 done)
 INSERT INTO lesson_progress (enrollment_id, lesson_id, is_completed, seconds_watched, last_watched_at)
@@ -851,8 +851,8 @@ JOIN modules m ON m.course_id = c.id
 JOIN lessons l ON l.module_id = m.id
 JOIN users   u ON e.user_id   = u.id
 WHERE u.email = 'miguel.hernandez@aprende.ues'
-  AND c.title = 'Python for Data Analysis'
-  AND m.title IN ('Python Essentials', 'Data Analysis with pandas');
+  AND c.title = 'Python para Análisis de Datos'
+  AND m.title IN ('Esenciales de Python', 'Análisis de Datos con pandas');
 
 INSERT INTO lesson_progress (enrollment_id, lesson_id, is_completed, seconds_watched, last_watched_at)
 SELECT
@@ -867,9 +867,9 @@ JOIN modules m ON m.course_id = c.id
 JOIN lessons l ON l.module_id = m.id
 JOIN users   u ON e.user_id   = u.id
 WHERE u.email = 'miguel.hernandez@aprende.ues'
-  AND c.title = 'Python for Data Analysis'
-  AND m.title = 'Data Visualization'
-  AND l.title = 'Matplotlib Basics';
+  AND c.title = 'Python para Análisis de Datos'
+  AND m.title = 'Visualización de Datos'
+  AND l.title = 'Bases de Matplotlib';
 
 -- Laura — UX Design (all 9 lessons completed)
 INSERT INTO lesson_progress (enrollment_id, lesson_id, is_completed, seconds_watched, last_watched_at)
@@ -885,7 +885,7 @@ JOIN modules m ON m.course_id = c.id
 JOIN lessons l ON l.module_id = m.id
 JOIN users   u ON e.user_id   = u.id
 WHERE u.email = 'laura.sanchez@aprende.ues'
-  AND c.title = 'UX Design Fundamentals';
+  AND c.title = 'Fundamentos de Diseño UX';
 
 -- Roberto — HTML&CSS (modules 1+2 all done + module 3 lesson 1)
 INSERT INTO lesson_progress (enrollment_id, lesson_id, is_completed, seconds_watched, last_watched_at)
@@ -901,8 +901,8 @@ JOIN modules m ON m.course_id = c.id
 JOIN lessons l ON l.module_id = m.id
 JOIN users   u ON e.user_id   = u.id
 WHERE u.email = 'roberto.cruz@aprende.ues'
-  AND c.title = 'HTML & CSS Fundamentals'
-  AND m.title IN ('Introduction to HTML', 'Styling with CSS');
+  AND c.title = 'Fundamentos de HTML y CSS'
+  AND m.title IN ('Introducción a HTML', 'Estilos con CSS');
 
 INSERT INTO lesson_progress (enrollment_id, lesson_id, is_completed, seconds_watched, last_watched_at)
 SELECT
@@ -917,9 +917,9 @@ JOIN modules m ON m.course_id = c.id
 JOIN lessons l ON l.module_id = m.id
 JOIN users   u ON e.user_id   = u.id
 WHERE u.email = 'roberto.cruz@aprende.ues'
-  AND c.title = 'HTML & CSS Fundamentals'
-  AND m.title = 'Building a Real Project'
-  AND l.title = 'Planning Your Portfolio';
+  AND c.title = 'Fundamentos de HTML y CSS'
+  AND m.title = 'Construcción de un Proyecto Real'
+  AND l.title = 'Planificación de tu Portafolio';
 
 -- Roberto — JavaScript (module 1 fully done)
 INSERT INTO lesson_progress (enrollment_id, lesson_id, is_completed, seconds_watched, last_watched_at)
@@ -935,8 +935,8 @@ JOIN modules m ON m.course_id = c.id
 JOIN lessons l ON l.module_id = m.id
 JOIN users   u ON e.user_id   = u.id
 WHERE u.email = 'roberto.cruz@aprende.ues'
-  AND c.title = 'JavaScript from Zero to Hero'
-  AND m.title = 'JS Fundamentals';
+  AND c.title = 'JavaScript desde Cero hasta Experto'
+  AND m.title = 'Fundamentos de JavaScript';
 
 -- ============================================================
 -- REVIEWS
@@ -945,23 +945,23 @@ INSERT INTO reviews (user_id, course_id, rating, body, created_at)
 VALUES
   (
     (SELECT id FROM users  WHERE email = 'carlos.lopez@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'HTML & CSS Fundamentals'),
+    (SELECT id FROM courses WHERE title = 'Fundamentos de HTML y CSS'),
     5,
-    'Sofia explains everything with incredible clarity. I went from knowing nothing about HTML to deploying my own portfolio in just three weeks. The project-based approach makes every concept stick. Highly recommend to anyone starting from scratch.',
+    'Sofía explica todo con muchísima claridad. Pasé de no saber nada de HTML a publicar mi propio portafolio en solo tres semanas. El enfoque basado en proyectos ayuda a fijar cada concepto. Muy recomendado para quien empieza desde cero.',
     NOW() - INTERVAL '9 days'
   ),
   (
     (SELECT id FROM users  WHERE email = 'laura.sanchez@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'UX Design Fundamentals'),
+    (SELECT id FROM courses WHERE title = 'Fundamentos de Diseño UX'),
     5,
-    'This course completely changed the way I think about building products. The usability testing module was an eye-opener — I had never talked to real users before. Ana is an incredible teacher and the Figma exercises are top notch.',
+    'Este curso cambió por completo mi forma de pensar al construir productos. El módulo de pruebas de usabilidad me abrió los ojos: nunca había hablado con usuarios reales. Ana es una docente excelente y los ejercicios en Figma son de primer nivel.',
     NOW() - INTERVAL '4 days'
   ),
   (
     (SELECT id FROM users  WHERE email = 'roberto.cruz@aprende.ues'),
-    (SELECT id FROM courses WHERE title = 'HTML & CSS Fundamentals'),
+    (SELECT id FROM courses WHERE title = 'Fundamentos de HTML y CSS'),
     4,
-    'Really solid foundation course. The CSS Grid and Flexbox lessons are worth the price of admission alone. I would have loved a bit more content on CSS animations, but the portfolio project is genuinely impressive to show recruiters.',
+    'Curso de fundamentos muy sólido. Las lecciones de CSS Grid y Flexbox valen muchísimo por sí solas. Me habría gustado un poco más de contenido sobre animaciones CSS, pero el proyecto de portafolio queda muy bien para mostrarlo.',
     NOW() - INTERVAL '2 days'
   );
 
@@ -975,7 +975,7 @@ VALUES
        JOIN users   u ON e.user_id   = u.id
        JOIN courses c ON e.course_id = c.id
       WHERE u.email  = 'carlos.lopez@aprende.ues'
-        AND c.title  = 'HTML & CSS Fundamentals'),
+        AND c.title  = 'Fundamentos de HTML y CSS'),
     'CERT-HTMLCSS-2025-CLO-001',
     'https://storage.aprende.ues/certificates/CERT-HTMLCSS-2025-CLO-001.pdf',
     NOW() - INTERVAL '10 days'
@@ -985,7 +985,7 @@ VALUES
        JOIN users   u ON e.user_id   = u.id
        JOIN courses c ON e.course_id = c.id
       WHERE u.email  = 'laura.sanchez@aprende.ues'
-        AND c.title  = 'UX Design Fundamentals'),
+        AND c.title  = 'Fundamentos de Diseño UX'),
     'CERT-UXDES-2025-LSA-001',
     'https://storage.aprende.ues/certificates/CERT-UXDES-2025-LSA-001.pdf',
     NOW() - INTERVAL '5 days'

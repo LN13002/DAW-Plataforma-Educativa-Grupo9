@@ -53,7 +53,7 @@ const DEDICATED_RESOURCE_VIEWS = new Set([
   'certificates',
 ])
 // Vistas exclusivas para administrador
-const ADMIN_ONLY_VIEWS = new Set(['users', 'categories', 'comments', 'enrollments', 'lesson-progress', 'admin'])
+const ADMIN_ONLY_VIEWS = new Set(['users', 'categories', 'comments', 'enrollments', 'lesson-progress', 'admin', 'certificates'])
 // Vistas accesibles para admin e instructor (con filtrado por cursos propios para instructor)
 const STAFF_ONLY_VIEWS = new Set(['modules', 'lessons'])
 

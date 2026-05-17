@@ -23,6 +23,7 @@ const adminNavItems = [
   ['forum', 'Comentarios', 'comments'],
   ['how_to_reg', 'Inscripciones', 'enrollments'],
   ['play_lesson', 'Lecciones', 'lessons'],
+  ['workspace_premium', 'Certificados', 'certificates'],
   ['settings', 'Ajustes', 'profile'],
 ]
 

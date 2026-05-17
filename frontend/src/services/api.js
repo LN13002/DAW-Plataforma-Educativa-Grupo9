@@ -87,12 +87,24 @@ export const api = {
     }),
   getEnrollments: () => request('/api/enrollments'),
   getEnrollmentsByUser: (userId) => request(`/api/enrollments/user/${userId}`),
+  
+  // ==== Certficate module ====
   getCertificates: () => request('/api/certificates'),
+  getCertificateById: (id) => request(`/api/certificates/${id}`),
   createCertificate: (payload) =>
     request('/api/certificates', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  updateCertificate: (id, payload) =>
+    request(`/api/certificates/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  deleteCertificate: (id) =>
+    request(`/api/certificates/${id}`, {
+      method: 'DELETE',
+  }),
   getReviews: () => request('/api/reviews'),
   getComments: () => request('/api/comments'),
   createComment: (payload) =>

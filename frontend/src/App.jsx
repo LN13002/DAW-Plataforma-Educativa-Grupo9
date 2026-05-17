@@ -15,6 +15,7 @@ import { LessonsPage } from './pages/lessons/LessonsPage'
 import { LessonProgressPage } from './pages/lesson-progress/LessonProgressPage'
 import { EnrollmentsPage } from './pages/enrollments/EnrollmentsPage'
 import { UsersPage } from './pages/users/UsersPage'
+import { CertificatesPage } from './pages/certificates/CertificatesPage'
 import { CategoriesPage } from './pages/categories/CategoriesPage'
 
 const DEFAULT_USER = {
@@ -49,6 +50,7 @@ const DEDICATED_RESOURCE_VIEWS = new Set([
   'enrollments',
   'lessons',
   'lesson-progress',
+  'certificates',
 ])
 // Vistas exclusivas para administrador
 const ADMIN_ONLY_VIEWS = new Set(['users', 'categories', 'comments', 'enrollments', 'lesson-progress', 'admin'])
@@ -421,7 +423,9 @@ function App() {
     ),
     library: <LibraryView courses={appCourses.filter((course) => course.progress > 0)} onOpenPlayer={openPlayer} />,
     progress: <UserProgressView user={appUser} courses={appCourses} certificates={appCertificates} onOpenPlayer={openPlayer} />,
-    certificates: <CertificatesView certificates={appCertificates} />,
+    certificates: isAdminView 
+      ? <CertificatesPage />
+      : <CertificatesView certificates={appCertificates} />,
     profile: <ProfileView user={appUser} courses={appCourses} certificates={appCertificates} />,
     admin: (
       <BackendPanelView

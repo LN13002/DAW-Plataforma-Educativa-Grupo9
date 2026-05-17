@@ -93,6 +93,20 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  updateCertificate: (id, payload) =>
+    request(`/api/certificates/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+
+  deleteCertificate: (id) =>
+    request(`/api/certificates/${id}`, {
+      method: 'DELETE',
+    }),
+
+  getCertificateById: (id) =>
+    request(`/api/certificates/${id}`),
+  
   getReviews: () => request('/api/reviews'),
   getComments: () => request('/api/comments'),
   createComment: (payload) =>

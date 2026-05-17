@@ -16,6 +16,7 @@ import { LessonProgressPage } from './pages/lesson-progress/LessonProgressPage'
 import { EnrollmentsPage } from './pages/enrollments/EnrollmentsPage'
 import { UsersPage } from './pages/users/UsersPage'
 import { CategoriesPage } from './pages/categories/CategoriesPage'
+import { CertificatesPage } from './pages/certificates/CertificatesPage'
 
 const DEFAULT_USER = {
   id: '',
@@ -49,9 +50,11 @@ const DEDICATED_RESOURCE_VIEWS = new Set([
   'enrollments',
   'lessons',
   'lesson-progress',
+  'certificates',
 ])
+
 // Vistas exclusivas para administrador
-const ADMIN_ONLY_VIEWS = new Set(['users', 'categories', 'comments', 'enrollments', 'lesson-progress', 'admin'])
+const ADMIN_ONLY_VIEWS = new Set(['users', 'categories', 'comments', 'enrollments', 'lesson-progress', 'certificates', 'admin'])
 // Vistas accesibles para admin e instructor (con filtrado por cursos propios para instructor)
 const STAFF_ONLY_VIEWS = new Set(['modules', 'lessons'])
 
@@ -368,6 +371,7 @@ function App() {
     'lesson-progress': <LessonProgressPage />,
     users: <UsersPage />,
     categories: <CategoriesPage />,
+    certificates: <CertificatesPage />,
     home: (
       <HomeView
         user={appUser}

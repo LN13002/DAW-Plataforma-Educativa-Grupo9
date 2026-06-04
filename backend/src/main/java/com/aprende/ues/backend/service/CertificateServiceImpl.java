@@ -19,12 +19,14 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.text.Normalizer;
@@ -137,7 +139,7 @@ public class CertificateServiceImpl implements CertificateService {
             document.addPage(page);
 
             try (PDPageContentStream content = new PDPageContentStream(document, page)) {
-                drawCertificate(content, pageSize, studentName, courseTitle, issuedAt, certificate.getCode());
+                drawCertificate(document, content, pageSize, studentName, courseTitle, issuedAt, certificate.getCode());
             }
 
             document.save(output);
@@ -148,6 +150,7 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     private void drawCertificate(
+            PDDocument document,
             PDPageContentStream content,
             PDRectangle pageSize,
             String studentName,
@@ -183,22 +186,22 @@ public class CertificateServiceImpl implements CertificateService {
         content.setNonStrokingColor(new Color(248, 240, 236));
         drawCenteredText(content, "UES", sansBold, 152, width / 2, 220);
 
-        drawSeal(content, width / 2, height - 116);
+        drawLogo(document, content, width / 2, height - 64);
 
         content.setNonStrokingColor(new Color(33, 27, 27));
-        drawCenteredText(content, "Universidad de El Salvador", bold, 26, width / 2, height - 165);
-        drawCenteredText(content, "Aprende UES", bold, 17, width / 2, height - 190);
-        drawCenteredText(content, "Por cuanto:", regular, 19, width / 2, height - 232);
+        drawCenteredText(content, "Universidad de El Salvador", bold, 26, width / 2, height - 182);
+        drawCenteredText(content, "Aprende UES", bold, 17, width / 2, height - 207);
+        drawCenteredText(content, "Por cuanto:", regular, 19, width / 2, height - 249);
 
         float studentSize = fitFontSize(studentName, bold, 36, 24, width - 170);
-        drawCenteredText(content, studentName, bold, studentSize, width / 2, height - 278);
-        drawLine(content, width / 2 - 260, height - 286, width / 2 + 260, height - 286, 33, 27, 27, 1);
+        drawCenteredText(content, studentName, bold, studentSize, width / 2, height - 295);
+        drawLine(content, width / 2 - 260, height - 303, width / 2 + 260, height - 303, 33, 27, 27, 1);
 
-        drawCenteredText(content, "ha finalizado el curso", italic, 21, width / 2, height - 338);
+        drawCenteredText(content, "ha finalizado el curso", italic, 21, width / 2, height - 353);
 
         content.setNonStrokingColor(new Color(108, 22, 37));
         List<String> courseLines = wrapText(courseTitle, bold, 28, width - 190);
-        float courseY = height - 381;
+        float courseY = height - 394;
         for (String line : courseLines) {
             drawCenteredText(content, line, bold, 28, width / 2, courseY);
             courseY -= 34;
@@ -216,29 +219,20 @@ public class CertificateServiceImpl implements CertificateService {
         drawCenteredText(content, certificateCode, sansBold, 11, width / 2, 66);
     }
 
-    private void drawSeal(PDPageContentStream content, float centerX, float centerY) throws IOException {
-        content.setStrokingColor(new Color(108, 22, 37));
-        content.setLineWidth(2.2f);
-        drawCircle(content, centerX, centerY, 46);
-        content.setLineWidth(1);
-        drawCircle(content, centerX, centerY, 36);
-
-        PDType1Font bold = new PDType1Font(Standard14Fonts.FontName.TIMES_BOLD);
-        content.setNonStrokingColor(new Color(108, 22, 37));
-        drawCenteredText(content, "UES", bold, 22, centerX, centerY + 6);
-        drawCenteredText(content, "UNIVERSIDAD DE", bold, 7, centerX, centerY + 31);
-        drawCenteredText(content, "EL SALVADOR", bold, 7, centerX, centerY - 30);
+    private void drawLogo(PDDocument document, PDPageContentStream content, float centerX, float topY) throws IOException {
+        PDImageXObject logo = loadUesLogo(document);
+        float logoWidth = 58;
+        float logoHeight = logoWidth * logo.getHeight() / logo.getWidth();
+        content.drawImage(logo, centerX - (logoWidth / 2), topY - logoHeight, logoWidth, logoHeight);
     }
 
-    private void drawCircle(PDPageContentStream content, float centerX, float centerY, float radius) throws IOException {
-        float control = radius * 0.55228475f;
-        content.moveTo(centerX + radius, centerY);
-        content.curveTo(centerX + radius, centerY + control, centerX + control, centerY + radius, centerX, centerY + radius);
-        content.curveTo(centerX - control, centerY + radius, centerX - radius, centerY + control, centerX - radius, centerY);
-        content.curveTo(centerX - radius, centerY - control, centerX - control, centerY - radius, centerX, centerY - radius);
-        content.curveTo(centerX + control, centerY - radius, centerX + radius, centerY - control, centerX + radius, centerY);
-        content.closePath();
-        content.stroke();
+    private PDImageXObject loadUesLogo(PDDocument document) throws IOException {
+        try (InputStream input = getClass().getResourceAsStream("/assets/ues-logo.png")) {
+            if (input == null) {
+                throw new IOException("No se encontro el logo UES en /assets/ues-logo.png");
+            }
+            return PDImageXObject.createFromByteArray(document, input.readAllBytes(), "ues-logo");
+        }
     }
 
     private void drawSkewedBand(PDPageContentStream content, float x, float y, float width, float height, float skew) throws IOException {

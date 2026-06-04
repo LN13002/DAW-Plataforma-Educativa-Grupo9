@@ -23,7 +23,7 @@ El proyecto está organizado bajo una arquitectura desacoplada en tres capas pri
 Antes de levantar el proyecto asegúrate de tener instalado:
 
 - [mise](https://mise.jdx.dev/) — gestión de herramientas y tareas → [ver guía de instalación](docs/mise.md)
-- [Docker](https://www.docker.com/) — para la base de datos PostgreSQL
+- [Docker](https://www.docker.com/) — para PostgreSQL o para levantar toda la app contenerizada
 
 mise se encarga de instalar automáticamente **Java 21 (Temurin)** al entrar al proyecto.
 
@@ -47,6 +47,8 @@ mise install
 
 ## Levantar el proyecto
 
+### Desarrollo local
+
 ```bash
 mise run dev
 ```
@@ -58,13 +60,34 @@ Esto ejecuta en orden:
 3. Aplica las migraciones de base de datos automáticamente con **Flyway**
 4. Abre el navegador en **Swagger UI** cuando el servidor esté listo
 
+### Stack completo con Docker
+
+```bash
+mise run app:up
+```
+
+Esto construye el frontend, lo empaqueta dentro del backend de Spring Boot y levanta:
+
+1. Aplicación web en `http://localhost:8080`
+2. API en `http://localhost:8080/api`
+3. PostgreSQL en `localhost:5433`
+
+Para detenerlo:
+
+```bash
+mise run app:down
+```
+
 ---
 
 ## Tareas disponibles
 
 | Comando | Descripción |
 |---|---|
-| `mise run dev` | Inicia todo: base de datos + backend |
+| `mise run dev` | Inicia desarrollo local: base de datos + backend + frontend |
+| `mise run app:up` | Construye y levanta app + base de datos con Docker Compose |
+| `mise run app:down` | Detiene el stack completo de Docker Compose |
+| `mise run app:logs` | Muestra logs de app y base de datos |
 | `mise run backend` | Solo el backend (requiere DB activa) |
 | `mise run db:up` | Solo levanta el contenedor de PostgreSQL |
 | `mise run db:down` | Detiene y elimina el contenedor |
@@ -77,6 +100,8 @@ Esto ejecuta en orden:
 
 | Servicio | URL |
 |---|---|
+| App web contenerizada | `http://localhost:8080` |
+| Frontend local (Vite) | `http://localhost:5173` |
 | API base | `http://localhost:8080/api` |
 | Swagger UI | `http://localhost:8080/swagger-ui.html` |
 | Actuator (health) | `http://localhost:8080/actuator/health` |

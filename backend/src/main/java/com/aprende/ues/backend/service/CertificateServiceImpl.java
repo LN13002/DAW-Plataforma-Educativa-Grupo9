@@ -13,11 +13,20 @@ import com.aprende.ues.backend.model.enums.EnrollmentStatus;
 import com.aprende.ues.backend.repository.CertificateRepository;
 import com.aprende.ues.backend.repository.EnrollmentRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
@@ -121,44 +130,199 @@ public class CertificateServiceImpl implements CertificateService {
         String courseTitle = enrollment.getCourse().getTitle();
         String issuedAt = certificate.getIssuedAt().toLocalDate().toString();
 
-        String html = """
-                <!doctype html>
-                <html lang="es">
-                <head>
-                  <meta charset="utf-8">
-                  <title>Certificado %s</title>
-                  <style>
-                    body { font-family: Arial, sans-serif; margin: 0; color: #2b2b2b; }
-                    .certificate { min-height: 720px; border: 18px solid #7a0000; margin: 32px; padding: 52px; text-align: center; }
-                    .brand { color: #7a0000; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-                    h1 { color: #7a0000; font-size: 48px; margin: 32px 0 12px; }
-                    h2 { font-size: 34px; margin: 20px 0; }
-                    p { font-size: 20px; line-height: 1.6; }
-                    .code { margin-top: 42px; font-size: 14px; color: #555; }
-                  </style>
-                </head>
-                <body>
-                  <section class="certificate">
-                    <div class="brand">AprendeUES · Universidad de El Salvador</div>
-                    <h1>Certificado de finalización</h1>
-                    <p>Se certifica que</p>
-                    <h2>%s</h2>
-                    <p>completó satisfactoriamente el curso</p>
-                    <h2>%s</h2>
-                    <p>Emitido el %s</p>
-                    <p class="code">Código de verificación: %s</p>
-                  </section>
-                </body>
-                </html>
-                """.formatted(
-                escapeHtml(certificate.getCode()),
-                escapeHtml(studentName),
-                escapeHtml(courseTitle),
-                escapeHtml(issuedAt),
-                escapeHtml(certificate.getCode())
-        );
+        try (PDDocument document = new PDDocument();
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDRectangle pageSize = new PDRectangle(PDRectangle.LETTER.getHeight(), PDRectangle.LETTER.getWidth());
+            PDPage page = new PDPage(pageSize);
+            document.addPage(page);
 
-        return html.getBytes(StandardCharsets.UTF_8);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                drawCertificate(content, pageSize, studentName, courseTitle, issuedAt, certificate.getCode());
+            }
+
+            document.save(output);
+            return output.toByteArray();
+        } catch (IOException ex) {
+            throw new UncheckedIOException("No se pudo generar el PDF del certificado", ex);
+        }
+    }
+
+    private void drawCertificate(
+            PDPageContentStream content,
+            PDRectangle pageSize,
+            String studentName,
+            String courseTitle,
+            String issuedAt,
+            String certificateCode
+    ) throws IOException {
+        float width = pageSize.getWidth();
+        float height = pageSize.getHeight();
+        float margin = 28;
+        PDType1Font regular = new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
+        PDType1Font bold = new PDType1Font(Standard14Fonts.FontName.TIMES_BOLD);
+        PDType1Font italic = new PDType1Font(Standard14Fonts.FontName.TIMES_ITALIC);
+        PDType1Font sans = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        PDType1Font sansBold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+
+        content.setNonStrokingColor(new Color(255, 253, 248));
+        content.addRect(0, 0, width, height);
+        content.fill();
+
+        content.setStrokingColor(new Color(108, 22, 37));
+        content.setLineWidth(3);
+        content.addRect(margin, margin, width - (margin * 2), height - (margin * 2));
+        content.stroke();
+        content.setLineWidth(1.2f);
+        content.addRect(margin + 12, margin + 12, width - ((margin + 12) * 2), height - ((margin + 12) * 2));
+        content.stroke();
+
+        content.setNonStrokingColor(new Color(95, 16, 32));
+        drawSkewedBand(content, margin + 30, height - margin - 8, 250, 14, 30);
+        drawSkewedBand(content, width - margin - 280, margin - 6, 250, 14, 30);
+
+        content.setNonStrokingColor(new Color(248, 240, 236));
+        drawCenteredText(content, "UES", sansBold, 152, width / 2, 220);
+
+        drawSeal(content, width / 2, height - 116);
+
+        content.setNonStrokingColor(new Color(33, 27, 27));
+        drawCenteredText(content, "Universidad de El Salvador", bold, 26, width / 2, height - 165);
+        drawCenteredText(content, "Aprende UES", bold, 17, width / 2, height - 190);
+        drawCenteredText(content, "Por cuanto:", regular, 19, width / 2, height - 232);
+
+        float studentSize = fitFontSize(studentName, bold, 36, 24, width - 170);
+        drawCenteredText(content, studentName, bold, studentSize, width / 2, height - 278);
+        drawLine(content, width / 2 - 260, height - 286, width / 2 + 260, height - 286, 33, 27, 27, 1);
+
+        drawCenteredText(content, "ha finalizado el curso", italic, 21, width / 2, height - 338);
+
+        content.setNonStrokingColor(new Color(108, 22, 37));
+        List<String> courseLines = wrapText(courseTitle, bold, 28, width - 190);
+        float courseY = height - 381;
+        for (String line : courseLines) {
+            drawCenteredText(content, line, bold, 28, width / 2, courseY);
+            courseY -= 34;
+        }
+
+        content.setNonStrokingColor(new Color(33, 27, 27));
+        drawCenteredText(content, "Por tanto, se extiende el presente certificado de finalizacion", regular, 15, width / 2, 164);
+        drawCenteredText(content, "en Ciudad Universitaria, el " + issuedAt + ".", regular, 15, width / 2, 144);
+
+        drawLine(content, 86, 86, 304, 86, 45, 41, 41, .8f);
+        drawCenteredText(content, "Coordinacion academica", regular, 12, 195, 68);
+        drawLine(content, width - 304, 86, width - 86, 86, 45, 41, 41, .8f);
+        drawCenteredText(content, "Universidad de El Salvador", regular, 12, width - 195, 68);
+        drawCenteredText(content, "Codigo de verificacion", sans, 10, width / 2, 82);
+        drawCenteredText(content, certificateCode, sansBold, 11, width / 2, 66);
+    }
+
+    private void drawSeal(PDPageContentStream content, float centerX, float centerY) throws IOException {
+        content.setStrokingColor(new Color(108, 22, 37));
+        content.setLineWidth(2.2f);
+        drawCircle(content, centerX, centerY, 46);
+        content.setLineWidth(1);
+        drawCircle(content, centerX, centerY, 36);
+
+        PDType1Font bold = new PDType1Font(Standard14Fonts.FontName.TIMES_BOLD);
+        content.setNonStrokingColor(new Color(108, 22, 37));
+        drawCenteredText(content, "UES", bold, 22, centerX, centerY + 6);
+        drawCenteredText(content, "UNIVERSIDAD DE", bold, 7, centerX, centerY + 31);
+        drawCenteredText(content, "EL SALVADOR", bold, 7, centerX, centerY - 30);
+    }
+
+    private void drawCircle(PDPageContentStream content, float centerX, float centerY, float radius) throws IOException {
+        float control = radius * 0.55228475f;
+        content.moveTo(centerX + radius, centerY);
+        content.curveTo(centerX + radius, centerY + control, centerX + control, centerY + radius, centerX, centerY + radius);
+        content.curveTo(centerX - control, centerY + radius, centerX - radius, centerY + control, centerX - radius, centerY);
+        content.curveTo(centerX - radius, centerY - control, centerX - control, centerY - radius, centerX, centerY - radius);
+        content.curveTo(centerX + control, centerY - radius, centerX + radius, centerY - control, centerX + radius, centerY);
+        content.closePath();
+        content.stroke();
+    }
+
+    private void drawSkewedBand(PDPageContentStream content, float x, float y, float width, float height, float skew) throws IOException {
+        content.moveTo(x, y);
+        content.lineTo(x + width, y);
+        content.lineTo(x + width - skew, y - height);
+        content.lineTo(x - skew, y - height);
+        content.closePath();
+        content.fill();
+    }
+
+    private void drawLine(
+            PDPageContentStream content,
+            float startX,
+            float startY,
+            float endX,
+            float endY,
+            int red,
+            int green,
+            int blue,
+            float width
+    ) throws IOException {
+        content.setStrokingColor(new Color(red, green, blue));
+        content.setLineWidth(width);
+        content.moveTo(startX, startY);
+        content.lineTo(endX, endY);
+        content.stroke();
+    }
+
+    private void drawCenteredText(
+            PDPageContentStream content,
+            String text,
+            PDType1Font font,
+            float fontSize,
+            float centerX,
+            float baselineY
+    ) throws IOException {
+        float textWidth = font.getStringWidth(pdfText(text)) / 1000 * fontSize;
+        content.beginText();
+        content.setFont(font, fontSize);
+        content.newLineAtOffset(centerX - (textWidth / 2), baselineY);
+        content.showText(pdfText(text));
+        content.endText();
+    }
+
+    private float fitFontSize(String text, PDType1Font font, float preferred, float minimum, float maxWidth) throws IOException {
+        float size = preferred;
+        while (size > minimum && font.getStringWidth(pdfText(text)) / 1000 * size > maxWidth) {
+            size -= 1;
+        }
+        return size;
+    }
+
+    private List<String> wrapText(String text, PDType1Font font, float fontSize, float maxWidth) throws IOException {
+        String[] words = pdfText(text).split("\\s+");
+        List<String> lines = new java.util.ArrayList<>();
+        StringBuilder current = new StringBuilder();
+
+        for (String word : words) {
+            String candidate = current.isEmpty() ? word : current + " " + word;
+            if (font.getStringWidth(candidate) / 1000 * fontSize <= maxWidth) {
+                current = new StringBuilder(candidate);
+            } else {
+                if (!current.isEmpty()) {
+                    lines.add(current.toString());
+                }
+                current = new StringBuilder(word);
+            }
+        }
+
+        if (!current.isEmpty()) {
+            lines.add(current.toString());
+        }
+
+        return lines.stream().limit(3).toList();
+    }
+
+    private String pdfText(String value) {
+        if (value == null) return "";
+        return value
+                .replace("\r", " ")
+                .replace("\n", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 
     // Mapper
@@ -223,13 +387,4 @@ public class CertificateServiceImpl implements CertificateService {
         return value != null && !value.trim().isEmpty();
     }
 
-    private String escapeHtml(String value) {
-        if (value == null) return "";
-        return value
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;");
-    }
 }

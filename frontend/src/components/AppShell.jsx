@@ -12,8 +12,7 @@ const instructorNavItems = [
   ['home', 'Inicio', 'home'],
   ['view_module', 'Módulos', 'modules'],
   ['play_lesson', 'Lecciones', 'lessons'],
-  ['explore', 'Cursos', 'explore'],
-  ['workspace_premium', 'Diplomas', 'certificates'],
+  ['explore', 'Mis cursos', 'explore'],
   ['settings', 'Ajustes', 'profile'],
 ]
 
@@ -38,7 +37,7 @@ export function AppShell({ user, personas = [], activeView, onNavigate, onLogout
   const topbarItems = isAdmin
     ? [['Panel', 'modules'], ['Inscripciones', 'enrollments'], ['Lecciones', 'lessons']]
     : isInstructor
-    ? [['Mis Módulos', 'modules'], ['Mis Lecciones', 'lessons'], ['Cursos', 'explore']]
+    ? [['Mis Módulos', 'modules'], ['Mis Lecciones', 'lessons'], ['Mis cursos', 'explore']]
     : [['Mis Cursos', 'library'], ['Explorar', 'explore'], ['Comunidad', 'profile']]
 
   const handleNavigate = (view) => {

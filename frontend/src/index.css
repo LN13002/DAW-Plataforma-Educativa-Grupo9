@@ -746,6 +746,27 @@ h3,
   padding: 24px;
 }
 
+.dashboard-empty-state {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+
+.dashboard-empty-state > .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 42px;
+}
+
+.dashboard-empty-state h2 {
+  color: var(--color-primary);
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.dashboard-empty-state p {
+  color: var(--color-muted);
+}
+
 .section-heading {
   display: flex;
   align-items: center;
@@ -773,6 +794,10 @@ h3,
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
+}
+
+.catalog-grid > .comment-empty-state {
+  grid-column: 1 / -1;
 }
 
 .course-card {
@@ -951,11 +976,45 @@ h3,
   background: #070707;
 }
 
+.video-frame iframe,
 .video-frame img {
   width: 100%;
   height: 100%;
+}
+
+.video-frame iframe {
+  display: block;
+  border: 0;
+}
+
+.video-frame img {
   object-fit: cover;
   opacity: 0.72;
+}
+
+.video-placeholder {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: white;
+  text-align: center;
+}
+
+.video-placeholder .material-symbols-outlined {
+  color: var(--color-primary-soft);
+  font-size: 48px;
+}
+
+.video-placeholder strong {
+  font-size: 18px;
+}
+
+.video-placeholder span {
+  color: rgb(255 255 255 / 72%);
+  font-size: 14px;
 }
 
 .play-button {
@@ -1401,6 +1460,33 @@ h3,
   text-decoration: none;
 }
 
+.certificate-empty-state {
+  display: grid;
+  grid-column: 1 / -1;
+  justify-items: start;
+  gap: 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  padding: 28px;
+}
+
+.certificate-empty-state > .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 42px;
+}
+
+.certificate-empty-state h2 {
+  color: var(--color-primary);
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.certificate-empty-state p {
+  max-width: 620px;
+  color: var(--color-muted);
+}
+
 .user-progress-page {
   display: grid;
   gap: 24px;
@@ -1684,6 +1770,16 @@ h3,
 .role-course-list article button:hover {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
+}
+
+.role-course-empty {
+  grid-template-columns: auto minmax(0, 1fr);
+  justify-content: start;
+}
+
+.role-course-empty > .material-symbols-outlined {
+  color: var(--color-primary);
+  font-size: 34px;
 }
 
 .profile-hero {
@@ -3143,6 +3239,14 @@ h3,
 
 .mini-panel a:hover {
   color: var(--color-primary);
+}
+
+.mini-panel p {
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  color: var(--color-muted);
+  font-weight: 700;
+  padding: 12px;
 }
 
 @media (max-width: 1180px) {

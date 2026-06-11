@@ -1,34 +1,58 @@
 import { Icon } from './Icon'
 import { Button } from './Button'
 
-export function VideoPlayerCard({ title = 'Implementacion de API Gateway con NestJS', courseTitle, onComplete }) {
+function getYouTubeEmbedUrl(videoUrl) {
+  if (!videoUrl) return ''
+
+  try {
+    const url = new URL(videoUrl)
+    if (url.hostname.includes('youtube.com') && url.pathname.startsWith('/embed/')) {
+      return videoUrl
+    }
+    if (url.hostname.includes('youtube.com')) {
+      const videoId = url.searchParams.get('v')
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : ''
+    }
+    if (url.hostname === 'youtu.be') {
+      const videoId = url.pathname.replace('/', '')
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : ''
+    }
+  } catch {
+    return ''
+  }
+
+  return ''
+}
+
+export function VideoPlayerCard({ title = 'Implementacion de API Gateway con NestJS', courseTitle, videoUrl, onComplete }) {
+  const embedUrl = getYouTubeEmbedUrl(videoUrl)
+
   return (
     <section className="player-card">
       <div className="video-frame">
-        <img
-          src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80"
-          alt=""
-        />
-        <button className="play-button" type="button" aria-label="Reproducir leccion">
-          <Icon name="play_arrow" filled />
-        </button>
-        <div className="video-controls">
-          <Icon name="pause" />
-          <div className="video-progress">
-            <span />
+        {embedUrl ? (
+          <iframe
+            src={embedUrl}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        ) : (
+          <div className="video-placeholder">
+            <Icon name="play_lesson" />
+            <strong>Contenido de la leccion</strong>
+            <span>Esta leccion aun no tiene un video enlazado.</span>
           </div>
-          <small>12:45 / 18:30</small>
-          <Icon name="fullscreen" />
-        </div>
+        )}
       </div>
 
       <div className="player-info">
         <div>
-          <span className="eyebrow">Modulo 4 • Microservicios</span>
+          <span className="eyebrow">{courseTitle || 'Leccion del curso'}</span>
           <h2>{title}</h2>
           <p>
             {courseTitle ? `${courseTitle}. ` : ''}
-            Video, descripcion, recursos, discusion y avance de la leccion en una sola vista.
+            Video y avance de la leccion en una sola vista.
           </p>
         </div>
         <Button onClick={onComplete}>

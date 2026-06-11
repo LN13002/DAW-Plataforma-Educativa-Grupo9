@@ -38,15 +38,15 @@ public class CertificateController {
     }
 
     @GetMapping("/{id}/download")
-    @Operation(summary = "Download certificate", description = "Returns a printable HTML certificate document")
+    @Operation(summary = "Download certificate", description = "Returns a printable PDF certificate document")
     public ResponseEntity<byte[]> download(@PathVariable UUID id) {
         CertificateResponseDTO certificate = certificateService.getById(id);
         byte[] document = certificateService.generateDocument(id);
 
         return ResponseEntity.ok()
-                .contentType(MediaType.TEXT_HTML)
+                .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-                        .filename(certificate.code() + ".html")
+                        .filename(certificate.code() + ".pdf")
                         .build()
                         .toString())
                 .body(document);

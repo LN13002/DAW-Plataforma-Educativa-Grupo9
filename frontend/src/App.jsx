@@ -53,7 +53,7 @@ const DEDICATED_RESOURCE_VIEWS = new Set([
   'certificates',
 ])
 // Vistas exclusivas para administrador
-const ADMIN_ONLY_VIEWS = new Set(['users', 'categories', 'comments', 'enrollments', 'lesson-progress', 'admin', 'certificates'])
+const ADMIN_ONLY_VIEWS = new Set(['users', 'categories', 'comments', 'enrollments', 'lesson-progress', 'admin'])
 // Vistas accesibles para admin e instructor (con filtrado por cursos propios para instructor)
 const STAFF_ONLY_VIEWS = new Set(['modules', 'lessons'])
 
@@ -68,6 +68,41 @@ function roleLabel(role) {
     student: 'User',
   }
   return labels[normalizeRole(role)] ?? role ?? 'User'
+}
+
+function courseProgress(course) {
+  return Number(course?.progress ?? 0)
+}
+
+function getLearnerStats(courses, certificates = []) {
+  const enrolledCourses = courses.filter((course) => course.enrollmentId)
+  const inProgressCourses = enrolledCourses.filter((course) => courseProgress(course) < 100)
+  const completedCourses = enrolledCourses.filter((course) => courseProgress(course) >= 100)
+  const nextCourse = [...inProgressCourses].sort((a, b) => courseProgress(b) - courseProgress(a))[0] ?? null
+
+  return {
+    enrolledCourses,
+    inProgressCourses,
+    completedCourses,
+    certificatesCount: certificates.length,
+    nextCourse,
+  }
+}
+
+function getInstructorScope(user, courses, modules, lessons, enrollments) {
+  const assignedCourses = courses.filter((course) => course.instructorId === user.id)
+  const assignedCourseIds = new Set(assignedCourses.map((course) => course.id))
+  const assignedModules = modules.filter((module) => assignedCourseIds.has(module.courseId))
+  const assignedModuleIds = new Set(assignedModules.map((module) => module.id))
+  const assignedLessons = lessons.filter((lesson) => assignedModuleIds.has(lesson.moduleId))
+  const assignedEnrollments = enrollments.filter((enrollment) => assignedCourseIds.has(enrollment.courseId))
+
+  return {
+    assignedCourses,
+    assignedModules,
+    assignedLessons,
+    assignedEnrollments,
+  }
 }
 
 function toAppUser(user) {
@@ -217,6 +252,7 @@ function App() {
     setAppCertificates(nextCertificates)
     setSelectedCourse((current) => nextCourses.find((course) => course.id === current?.id) ?? nextCourses[0] ?? null)
     if (role === 'admin' && view === 'progress') setView('home')
+    if (role === 'instructor' && ['certificates', 'progress', 'library', 'player'].includes(view)) setView('home')
     if (ADMIN_ONLY_VIEWS.has(view) && role !== 'admin') setView('home')
     if (STAFF_ONLY_VIEWS.has(view) && role !== 'admin' && role !== 'instructor') setView('home')
     setCompletedMessage(`Viendo como ${roleLabel(user.role)}: ${user.firstName} ${user.lastName}`)
@@ -352,8 +388,13 @@ function App() {
 
   const isAdminView = appUser.plan === 'admin'
   const isInstructorView = appUser.plan === 'instructor'
+  const instructorCourses = isInstructorView
+    ? appCourses.filter((course) => course.instructorId === appUser.id)
+    : []
+  const visibleExploreCourses = isInstructorView ? instructorCourses : filteredCourses
+  const visibleCertificates = isAdminView ? backendCertificates.map(mapCertificateDto) : appCertificates
   const instructorCourseIds = isInstructorView
-    ? new Set(appCourses.filter((course) => course.instructorId === appUser.id).map((course) => course.id))
+    ? new Set(instructorCourses.map((course) => course.id))
     : null
 
   const canAccessView = (v) => {
@@ -375,7 +416,7 @@ function App() {
         user={appUser}
         courses={appCourses}
         categories={appCategories}
-        certificates={appCertificates}
+        certificates={visibleCertificates}
         modules={appModules}
         lessons={appLessons}
         enrollments={appEnrollments}
@@ -388,7 +429,7 @@ function App() {
     ),
     explore: (
       <ExploreView
-        courses={filteredCourses}
+        courses={visibleExploreCourses}
         categories={appCategories}
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
@@ -421,12 +462,12 @@ function App() {
         user={appUser}
       />
     ),
-    library: <LibraryView courses={appCourses.filter((course) => course.progress > 0)} onOpenPlayer={openPlayer} />,
-    progress: <UserProgressView user={appUser} courses={appCourses} certificates={appCertificates} onOpenPlayer={openPlayer} />,
-    certificates: isAdminView 
+    library: <LibraryView courses={appCourses.filter((course) => course.enrollmentId)} onOpenPlayer={openPlayer} onNavigate={setView} />,
+    progress: <UserProgressView user={appUser} courses={appCourses} certificates={visibleCertificates} onOpenPlayer={openPlayer} />,
+    certificates: isAdminView
       ? <CertificatesPage />
-      : <CertificatesView certificates={appCertificates} />,
-    profile: <ProfileView user={appUser} courses={appCourses} certificates={appCertificates} />,
+      : <CertificatesView certificates={visibleCertificates} onNavigate={setView} />,
+    profile: <ProfileView user={appUser} users={appUsers} courses={appCourses} modules={appModules} lessons={appLessons} enrollments={appEnrollments} certificates={visibleCertificates} />,
     admin: (
       <BackendPanelView
         resources={BACKEND_RESOURCES}
@@ -438,7 +479,7 @@ function App() {
   }
 
   const screen = !canAccessView(view)
-    ? <RoleAccessView role={appUser.plan} onNavigate={setView} />
+    ? <RoleAccessView role={appUser.plan} view={view} onNavigate={setView} />
     : screenByView[view] ?? screenByView.home
 
   return (
@@ -552,24 +593,32 @@ function AuthView({ mode, onModeChange, onSubmit }) {
   )
 }
 
-function RoleAccessView({ role, onNavigate }) {
+function RoleAccessView({ role, view, onNavigate }) {
+  const isInstructor = role === 'instructor'
+  const isStaffView = STAFF_ONLY_VIEWS.has(view)
+  const title = isStaffView ? 'Este módulo es para personal académico' : 'Este módulo es solo para Admin'
+  const description = isStaffView
+    ? `Estás viendo como ${roleLabel(role)}. Cambia a una persona con rol docente o administrador para gestionar este contenido.`
+    : `Estás viendo como ${roleLabel(role)}. Cambia a una persona Admin desde el menú de usuario o vuelve a tu espacio disponible.`
+  const secondaryAction = isInstructor
+    ? ['person', 'Ver mi perfil', 'profile']
+    : ['track_changes', 'Ver mi progreso', 'progress']
+
   return (
     <main className="page role-access-page">
       <section className="admin-panel role-access-card">
         <Icon name="admin_panel_settings" />
         <span className="eyebrow">Vista restringida</span>
-        <h1>Este módulo es solo para Admin</h1>
-        <p>
-          Estás viendo como {roleLabel(role)}. Cambia a una persona Admin desde el menú de usuario o vuelve a tu espacio de aprendizaje.
-        </p>
+        <h1>{title}</h1>
+        <p>{description}</p>
         <div className="enrollment-form-actions">
           <Button onClick={() => onNavigate('home')}>
             <Icon name="home" />
             Ir a inicio
           </Button>
-          <Button variant="secondary" onClick={() => onNavigate('progress')}>
-            <Icon name="track_changes" />
-            Ver mi progreso
+          <Button variant="secondary" onClick={() => onNavigate(secondaryAction[2])}>
+            <Icon name={secondaryAction[0]} />
+            {secondaryAction[1]}
           </Button>
         </div>
       </section>
@@ -592,6 +641,8 @@ function HomeView({
   setActiveCategory,
 }) {
   if (user.plan === 'admin') {
+    const completedEnrollments = enrollments.filter((enrollment) => Number(enrollment.progress ?? 0) >= 100)
+
     return (
       <RoleHomeView
         user={user}
@@ -599,9 +650,9 @@ function HomeView({
         description="Supervisa el contenido, las inscripciones y la actividad académica de la plataforma."
         stats={[
           ['school', courses.length, 'Cursos'],
-          ['view_module', modules.length, 'Módulos'],
-          ['play_lesson', lessons.length, 'Lecciones'],
           ['how_to_reg', enrollments.length, 'Inscripciones'],
+          ['task_alt', completedEnrollments.length, 'Completadas'],
+          ['workspace_premium', certificates.length, 'Certificados'],
         ]}
         actions={[
           ['Módulos', 'Organiza la estructura de cada curso.', 'view_module', 'modules'],
@@ -617,8 +668,7 @@ function HomeView({
   }
 
   if (user.plan === 'instructor') {
-    const instructorCourses = courses.filter((course) => course.instructorId === user.id)
-    const visibleCourses = instructorCourses.length > 0 ? instructorCourses : courses
+    const { assignedCourses, assignedModules, assignedLessons, assignedEnrollments } = getInstructorScope(user, courses, modules, lessons, enrollments)
 
     return (
       <RoleHomeView
@@ -626,10 +676,10 @@ function HomeView({
         title="Panel docente"
         description="Revisa tus cursos, módulos y lecciones publicadas para mantener el aprendizaje al día."
         stats={[
-          ['school', visibleCourses.length, 'Cursos asignados'],
-          ['view_module', modules.filter((module) => visibleCourses.some((course) => course.id === module.courseId)).length, 'Módulos'],
-          ['play_lesson', lessons.filter((lesson) => modules.some((module) => module.id === lesson.moduleId && visibleCourses.some((course) => course.id === module.courseId))).length, 'Lecciones'],
-          ['workspace_premium', certificates.length, 'Certificados'],
+          ['school', assignedCourses.length, 'Cursos asignados'],
+          ['view_module', assignedModules.length, 'Módulos'],
+          ['play_lesson', assignedLessons.length, 'Lecciones'],
+          ['groups', assignedEnrollments.length, 'Estudiantes inscritos'],
         ]}
         actions={[
           ['Mis módulos', 'Crea y organiza los módulos de tus cursos.', 'view_module', 'modules'],
@@ -637,14 +687,16 @@ function HomeView({
           ['Ver cursos', 'Abre el catálogo docente y revisa contenido.', 'school', 'explore'],
           ['Ajustes', 'Actualiza la información visible del perfil.', 'settings', 'profile'],
         ]}
-        courses={visibleCourses}
+        courses={assignedCourses}
         onOpenCourse={onOpenCourse}
         onNavigate={onNavigate}
       />
     )
   }
 
-  const currentCourse = courses[0]
+  const learnerStats = getLearnerStats(courses, certificates)
+  const currentCourse = learnerStats.nextCourse ?? learnerStats.enrolledCourses[0] ?? null
+  const currentCourseAction = currentCourse && courseProgress(currentCourse) >= 100 ? 'Revisar' : 'Continuar'
 
   return (
     <main className="page home-page">
@@ -663,10 +715,16 @@ function HomeView({
       <section className="dashboard-grid">
         <div className="content-stack">
           {currentCourse ? (
-            <CourseCard course={currentCourse} onOpen={() => onOpenPlayer(currentCourse)} actionLabel="Continuar" />
+            <CourseCard course={currentCourse} onOpen={() => onOpenPlayer(currentCourse)} actionLabel={currentCourseAction} />
           ) : (
-            <section className="section-block">
-              <p>Cargando cursos...</p>
+            <section className="section-block dashboard-empty-state">
+              <Icon name="school" />
+              <h2>Aún no tienes cursos inscritos</h2>
+              <p>Explora el catálogo e inscríbete a un curso para comenzar tu ruta de aprendizaje.</p>
+              <Button onClick={() => onNavigate('explore')}>
+                <Icon name="explore" />
+                Explorar cursos
+              </Button>
             </section>
           )}
 
@@ -692,13 +750,19 @@ function HomeView({
           </section>
         </div>
 
-        <DashboardSidePanel certificates={certificates} />
+        <DashboardSidePanel courses={courses} certificates={certificates} />
       </section>
     </main>
   )
 }
 
 function RoleHomeView({ user, title, description, stats, actions, courses, onOpenCourse, onNavigate }) {
+  const isAdmin = user.plan === 'admin'
+  const emptyTitle = isAdmin ? 'Aún no hay cursos creados' : 'Aún no tienes cursos asignados'
+  const emptyText = isAdmin
+    ? 'Crea el primer curso desde el panel de gestión para comenzar a poblar la plataforma.'
+    : 'Cuando un curso sea asignado a tu usuario docente, aparecerá aquí para revisión.'
+
   return (
     <main className="page role-home-page">
       <section className="page-header">
@@ -729,25 +793,35 @@ function RoleHomeView({ user, title, description, stats, actions, courses, onOpe
 
       <section className="section-block role-course-panel">
         <div className="section-heading">
-          <h2>{user.plan === 'admin' ? 'Cursos en plataforma' : 'Cursos para revisar'}</h2>
+          <h2>{isAdmin ? 'Cursos en plataforma' : 'Mis cursos asignados'}</h2>
           <button className="link-button" type="button" onClick={() => onNavigate('explore')}>
             Ver cursos
           </button>
         </div>
         <div className="role-course-list">
-          {courses.slice(0, 6).map((course) => (
-            <article key={course.id}>
+          {courses.length > 0 ? (
+            courses.slice(0, 6).map((course) => (
+              <article key={course.id}>
+                <div>
+                  <span>{course.category}</span>
+                  <h3>{course.title}</h3>
+                  <p>{course.instructor}</p>
+                </div>
+                <button type="button" onClick={() => onOpenCourse(course)}>
+                  <Icon name="visibility" />
+                  Revisar
+                </button>
+              </article>
+            ))
+          ) : (
+            <article className="role-course-empty">
+              <Icon name={isAdmin ? 'school' : 'assignment_ind'} />
               <div>
-                <span>{course.category}</span>
-                <h3>{course.title}</h3>
-                <p>{course.instructor}</p>
+                <h3>{emptyTitle}</h3>
+                <p>{emptyText}</p>
               </div>
-              <button type="button" onClick={() => onOpenCourse(course)}>
-                <Icon name="visibility" />
-                Revisar
-              </button>
             </article>
-          ))}
+          )}
         </div>
       </section>
     </main>
@@ -756,14 +830,17 @@ function RoleHomeView({ user, title, description, stats, actions, courses, onOpe
 
 function ExploreView({ courses, categories, activeCategory, setActiveCategory, onOpenCourse, user }) {
   const isStaff = user?.plan === 'admin' || user?.plan === 'instructor'
+  const isInstructor = user?.plan === 'instructor'
 
   return (
     <main className="page">
       <section className="page-header">
         <span className="eyebrow">{isStaff ? `Cursos · ${roleLabel(user.plan)}` : 'Catalogo'}</span>
-        <h1>{isStaff ? 'Vista de cursos' : 'Explora cursos de AprendeUes'}</h1>
+        <h1>{isInstructor ? 'Mis cursos asignados' : isStaff ? 'Vista de cursos' : 'Explora cursos de AprendeUes'}</h1>
         <p>
-          {isStaff
+          {isInstructor
+            ? 'Revisa únicamente los cursos asignados a tu usuario docente.'
+            : isStaff
             ? 'Revisa cursos desde una mirada de gestión: contenido, instructor, módulos y estado general.'
             : 'Filtra por facultad o area y abre el detalle para revisar contenido, instructor y recursos.'}
         </p>
@@ -776,9 +853,15 @@ function ExploreView({ courses, categories, activeCategory, setActiveCategory, o
       ) : null}
 
       <section className="catalog-grid">
-        {courses.map((course) => (
-          <CourseCard compact course={course} key={course.id} onOpen={onOpenCourse} actionLabel={isStaff ? 'Revisar curso' : undefined} />
-        ))}
+        {courses.length > 0 ? (
+          courses.map((course) => (
+            <CourseCard compact course={course} key={course.id} onOpen={onOpenCourse} actionLabel={isStaff ? 'Revisar curso' : undefined} />
+          ))
+        ) : (
+          <div className="comment-empty-state">
+            {isInstructor ? 'Aún no tienes cursos asignados.' : 'No hay cursos disponibles con estos filtros.'}
+          </div>
+        )}
       </section>
     </main>
   )
@@ -1026,7 +1109,7 @@ function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, compl
 
       <section className="learning-workspace full">
         <div className="content-stack">
-          <VideoPlayerCard title={lesson.title} courseTitle={course.title} onComplete={onComplete} />
+          <VideoPlayerCard title={lesson.title} courseTitle={course.title} videoUrl={lesson.videoUrl} onComplete={onComplete} />
 
           <section className="tabs-panel">
             <div className="tabs">
@@ -1178,7 +1261,7 @@ function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, compl
   )
 }
 
-function LibraryView({ courses, onOpenPlayer }) {
+function LibraryView({ courses, onOpenPlayer, onNavigate }) {
   return (
     <main className="page">
       <section className="page-header">
@@ -1188,31 +1271,37 @@ function LibraryView({ courses, onOpenPlayer }) {
       </section>
 
       <section className="library-list">
-        {courses.map((course) => (
-          <article className="library-item" key={course.id}>
-            <img src={course.image} alt="" />
-            <div>
-              <h2>{course.title}</h2>
-              <p>{course.instructor}</p>
-              <ProgressBar value={course.progress} label="Progreso del curso" />
-            </div>
-            <Button onClick={() => onOpenPlayer(course)}>Continuar</Button>
-          </article>
-        ))}
+        {courses.length > 0 ? (
+          courses.map((course) => (
+            <article className="library-item" key={course.id}>
+              <img src={course.image} alt="" />
+              <div>
+                <h2>{course.title}</h2>
+                <p>{course.instructor}</p>
+                <ProgressBar value={course.progress} label="Progreso del curso" />
+              </div>
+              <Button onClick={() => onOpenPlayer(course)}>Continuar</Button>
+            </article>
+          ))
+        ) : (
+          <div className="comment-empty-state">
+            Aún no tienes cursos inscritos. Explora cursos para comenzar tu ruta.
+            <Button onClick={() => onNavigate('explore')}>
+              <Icon name="explore" />
+              Explorar cursos
+            </Button>
+          </div>
+        )}
       </section>
     </main>
   )
 }
 
 function UserProgressView({ user, courses, certificates, onOpenPlayer }) {
-  const enrolledCourses = courses.filter((course) => course.enrollmentId || course.progress > 0)
+  const { enrolledCourses, completedCourses, nextCourse } = getLearnerStats(courses, certificates)
   const averageProgress = enrolledCourses.length
-    ? Math.round(enrolledCourses.reduce((total, course) => total + Number(course.progress ?? 0), 0) / enrolledCourses.length)
+    ? Math.round(enrolledCourses.reduce((total, course) => total + courseProgress(course), 0) / enrolledCourses.length)
     : 0
-  const completedCourses = enrolledCourses.filter((course) => Number(course.progress ?? 0) >= 100).length
-  const nextCourse = enrolledCourses
-    .filter((course) => Number(course.progress ?? 0) < 100)
-    .sort((a, b) => Number(b.progress ?? 0) - Number(a.progress ?? 0))[0]
 
   return (
     <main className="page user-progress-page">
@@ -1240,7 +1329,7 @@ function UserProgressView({ user, courses, certificates, onOpenPlayer }) {
         </article>
         <article>
           <Icon name="task_alt" />
-          <strong>{completedCourses}</strong>
+          <strong>{completedCourses.length}</strong>
           <span>Cursos completados</span>
         </article>
       </section>
@@ -1287,41 +1376,81 @@ function UserProgressView({ user, courses, certificates, onOpenPlayer }) {
   )
 }
 
-function CertificatesView({ certificates }) {
+function CertificatesView({ certificates, onNavigate }) {
+  const hasCertificates = certificates.length > 0
+
   return (
     <main className="page">
       <section className="page-header">
         <span className="eyebrow">Diplomas</span>
-        <h1>Certificados recientes</h1>
-        <p>Documentos emitidos por inscripciones completadas y listos para descargar desde el backend.</p>
+        <h1>Mis diplomas</h1>
+        <p>Consulta y descarga los certificados obtenidos al finalizar tus cursos.</p>
       </section>
 
       <section className="certificate-grid">
-        {certificates.map((certificate) => (
-          <article className="certificate-card" key={certificate.id}>
-            <Icon name="verified_user" />
-            <h2>{certificate.title}</h2>
-            {certificate.studentName ? <p>Otorgado a {certificate.studentName}</p> : null}
-            <p>Expedido el {certificate.issuedAt}</p>
-            <span>Código: {certificate.code ?? certificate.id}</span>
-            <a className="btn btn-secondary certificate-download" href={certificate.downloadUrl} download>
-              <Icon name="download" />
-              Descargar
-            </a>
+        {hasCertificates ? (
+          certificates.map((certificate) => (
+            <article className="certificate-card" key={certificate.id}>
+              <Icon name="verified_user" />
+              <h2>{certificate.title}</h2>
+              {certificate.studentName ? <p>Otorgado a {certificate.studentName}</p> : null}
+              <p>Expedido el {certificate.issuedAt}</p>
+              <span>Código: {certificate.code ?? certificate.id}</span>
+              <a className="btn btn-secondary certificate-download" href={certificate.downloadUrl} download>
+                <Icon name="download" />
+                Descargar
+              </a>
+            </article>
+          ))
+        ) : (
+          <article className="certificate-empty-state">
+            <Icon name="workspace_premium" />
+            <span className="eyebrow">Aún sin diplomas</span>
+            <h2>Aún no has completado ningún curso</h2>
+            <p>Cuando finalices un curso y se emita tu certificado, aparecerá aquí listo para descargar.</p>
+            <Button onClick={() => onNavigate('explore')}>
+              <Icon name="explore" />
+              Explorar cursos
+            </Button>
           </article>
-        ))}
+        )}
       </section>
     </main>
   )
 }
 
-function ProfileView({ user, courses, certificates }) {
+function ProfileView({ user, users, courses, modules, lessons, enrollments, certificates }) {
+  const isAdmin = user.plan === 'admin'
+  const isInstructor = user.plan === 'instructor'
+  const learnerStats = getLearnerStats(courses, certificates)
+  const instructorStats = isInstructor ? getInstructorScope(user, courses, modules, lessons, enrollments) : null
+  const profileLabel = isAdmin ? 'Administrador de plataforma' : isInstructor ? 'Docente activo' : 'Estudiante activo'
+  const profileStats = isAdmin
+    ? [
+        ['group', users.length, 'Usuarios'],
+        ['school', courses.length, 'Cursos'],
+        ['how_to_reg', enrollments.length, 'Inscripciones'],
+        ['workspace_premium', certificates.length, 'Certificados'],
+      ]
+    : isInstructor
+    ? [
+        ['school', instructorStats.assignedCourses.length, 'Cursos asignados'],
+        ['view_module', instructorStats.assignedModules.length, 'Módulos'],
+        ['play_lesson', instructorStats.assignedLessons.length, 'Lecciones'],
+        ['groups', instructorStats.assignedEnrollments.length, 'Estudiantes inscritos'],
+      ]
+    : [
+        ['pending_actions', learnerStats.inProgressCourses.length, 'Cursos en progreso'],
+        ['task_alt', learnerStats.completedCourses.length, 'Completados'],
+        ['workspace_premium', learnerStats.certificatesCount, 'Certificados'],
+      ]
+
   return (
     <main className="page">
       <section className="profile-hero">
         <div className="avatar profile-avatar">{user.initials}</div>
         <div>
-          <span className="eyebrow">Estudiante activo</span>
+          <span className="eyebrow">{profileLabel}</span>
           <h1>{user.name}</h1>
           <p>{user.faculty}</p>
           <p>{user.email}</p>
@@ -1333,13 +1462,13 @@ function ProfileView({ user, courses, certificates }) {
       </section>
 
       <section className="profile-grid">
-        <StatCard icon="pending_actions" value="04" label="Cursos en progreso" />
-        <StatCard icon="task_alt" value="12" label="Completados" />
-        <StatCard icon="workspace_premium" value={String(certificates.length).padStart(2, '0')} label="Certificados" />
+        {profileStats.map(([icon, value, label]) => (
+          <StatCard icon={icon} value={String(value).padStart(2, '0')} label={label} key={label} />
+        ))}
       </section>
 
       <section className="settings-grid">
-        {['Informacion personal', 'Seguridad y acceso', 'Pagos y facturacion', 'Idioma y region'].map((item) => (
+        {['Informacion personal', 'Seguridad y acceso', 'Preferencias de cuenta', 'Idioma y region'].map((item) => (
           <button type="button" key={item}>
             <span>{item}</span>
             <Icon name="chevron_right" />
@@ -1430,20 +1559,26 @@ function BackendPanelView({ resources, activeResourceKey, setActiveResourceKey, 
   )
 }
 
-function DashboardSidePanel({ certificates }) {
+function DashboardSidePanel({ courses, certificates }) {
+  const { inProgressCourses, completedCourses, certificatesCount } = getLearnerStats(courses, certificates)
+
   return (
     <aside className="side-stack">
-      <StatCard icon="pending_actions" value="04" label="Cursos en progreso" />
-      <StatCard icon="task_alt" value="12" label="Completados" />
-      <StatCard icon="workspace_premium" value="03" label="Certificados" />
+      <StatCard icon="pending_actions" value={String(inProgressCourses.length).padStart(2, '0')} label="Cursos en progreso" />
+      <StatCard icon="task_alt" value={String(completedCourses.length).padStart(2, '0')} label="Completados" />
+      <StatCard icon="workspace_premium" value={String(certificatesCount).padStart(2, '0')} label="Certificados" />
 
       <section className="mini-panel">
         <h2>Certificados recientes</h2>
-        {certificates.slice(0, 3).map((certificate) => (
-          <a href="#" key={certificate.id}>
-            {certificate.title}
-          </a>
-        ))}
+        {certificates.length > 0 ? (
+          certificates.slice(0, 3).map((certificate) => (
+            <a href={certificate.downloadUrl} key={certificate.id} download>
+              {certificate.title}
+            </a>
+          ))
+        ) : (
+          <p>Aún no tienes certificados emitidos.</p>
+        )}
       </section>
     </aside>
   )

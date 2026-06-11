@@ -1,8 +1,6 @@
 # AprendeUES
 
-Plataforma educativa moderna diseñada para ofrecer contenido en video, recursos interactivos y herramientas de aprendizaje estructurado.
-
-El proyecto está organizado bajo una arquitectura desacoplada en tres capas principales: **Frontend**, **Backend** y **Database**, permitiendo escalabilidad, mantenibilidad y evolución independiente de cada componente.
+Plataforma educativa para gestionar cursos, módulos, lecciones, progreso académico, comentarios, reseñas y certificados de finalización. El proyecto combina una experiencia web en React con una API REST en Spring Boot, persistencia en PostgreSQL y un flujo de desarrollo reproducible con mise y Docker.
 
 ---
 
@@ -18,45 +16,372 @@ El proyecto está organizado bajo una arquitectura desacoplada en tres capas pri
 
 ---
 
-## Requisitos previos
+## Vista general
 
-Antes de levantar el proyecto asegúrate de tener instalado:
+```mermaid
+flowchart LR
+  User["Usuario / Admin / Docente"] --> Browser["Navegador"]
+  Browser --> React["React + Vite"]
+  React --> API["Spring Boot REST API"]
+  API --> JPA["Spring Data JPA / Hibernate"]
+  JPA --> DB[("PostgreSQL 16")]
+  API --> Flyway["Flyway migrations"]
+  Flyway --> DB
+  API --> PDF["PDFBox certificados"]
 
-- [mise](https://mise.jdx.dev/) — gestión de herramientas y tareas → [ver guía de instalación](docs/mise.md)
-- [Docker](https://www.docker.com/) — para la base de datos PostgreSQL
+  subgraph Runtime["Runtime contenerizado"]
+    React
+    API
+    DB
+  end
+```
 
-mise se encarga de instalar automáticamente **Java 21 (Temurin)** al entrar al proyecto.
+La aplicación puede ejecutarse en modo desarrollo local o como stack completo con Docker Compose. En el stack contenerizado, el frontend se compila y queda servido como archivos estáticos dentro del backend Spring Boot.
 
 ---
 
-## Configuración inicial (solo la primera vez)
+## Stack tecnológico
+
+| Capa | Tecnología | Uso |
+|---|---|---|
+| Frontend | React + Vite | Interfaz web, vistas por rol, consumo de API |
+| Backend | Spring Boot 3.5 + Java 21 | API REST, validación, lógica de negocio |
+| Persistencia | Spring Data JPA + Hibernate | Repositorios y mapeo entidad-tabla |
+| Base de datos | PostgreSQL 16 | Datos académicos y progreso |
+| Migraciones | Flyway | Versionado del schema y seed data |
+| Certificados | Apache PDFBox | Generación de PDF descargable |
+| DX | mise | Instalación de herramientas y ejecución de tareas |
+| Contenedores | Docker + Docker Compose | App completa y PostgreSQL reproducibles |
+
+---
+
+## Estructura de carpetas
+
+```text
+.
+├── backend/
+│   ├── pom.xml
+│   ├── mvnw
+│   └── src/
+│       ├── main/
+│       │   ├── java/com/aprende/ues/backend/
+│       │   │   ├── config/          # OpenAPI / Swagger
+│       │   │   ├── controller/      # Endpoints REST
+│       │   │   ├── dto/             # Request/Response DTOs
+│       │   │   ├── exceptions/      # Errores de dominio y handler REST
+│       │   │   ├── model/           # Entidades JPA y enums
+│       │   │   ├── repository/      # Spring Data repositories
+│       │   │   └── service/         # Casos de uso y reglas de negocio
+│       │   └── resources/
+│       │       ├── application.properties
+│       │       ├── assets/          # Recursos usados por backend, como logo UES
+│       │       └── db/migration/    # Migraciones Flyway
+│       └── test/                    # Pruebas de backend
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.js
+│   └── src/
+│       ├── components/              # Componentes reutilizables
+│       ├── pages/                   # Pantallas CRUD / administración
+│       ├── services/                # Cliente API y mappers DTO
+│       ├── assets/                  # Imágenes estáticas
+│       ├── App.jsx
+│       └── main.jsx
+├── docs/
+│   └── mise.md
+├── Dockerfile                       # Build multi-stage frontend + backend
+├── docker-compose.yml               # App + PostgreSQL
+├── mise.toml                        # Herramientas y tareas DX
+└── README.md
+```
+
+---
+
+## Arquitectura de la aplicación
+
+```mermaid
+flowchart TB
+  subgraph Frontend["Frontend - React"]
+    App["App.jsx"]
+    Components["components/*"]
+    Pages["pages/*"]
+    ApiClient["services/api.js"]
+  end
+
+  subgraph Backend["Backend - Spring Boot"]
+    Controllers["Controllers REST"]
+    DTOs["DTOs"]
+    Services["Services"]
+    Repositories["Repositories"]
+    Entities["JPA Entities"]
+  end
+
+  subgraph Data["Data layer"]
+    Flyway["Flyway"]
+    Postgres[("PostgreSQL")]
+  end
+
+  App --> Components
+  App --> Pages
+  Pages --> ApiClient
+  Components --> ApiClient
+  ApiClient --> Controllers
+  Controllers --> DTOs
+  Controllers --> Services
+  Services --> Repositories
+  Repositories --> Entities
+  Entities --> Postgres
+  Flyway --> Postgres
+```
+
+### Capas del backend
+
+```mermaid
+flowchart LR
+  HTTP["HTTP / JSON"] --> Controller["Controller"]
+  Controller --> DTO["DTO"]
+  DTO --> Service["Service"]
+  Service --> Repository["Repository"]
+  Repository --> Entity["Entity"]
+  Entity --> DB[("PostgreSQL")]
+```
+
+---
+
+## Modelo de datos
+
+```mermaid
+erDiagram
+  USERS {
+    uuid id PK
+    varchar first_name
+    varchar last_name
+    varchar email UK
+    text password_hash
+    text avatar_url
+    varchar role
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  CATEGORIES {
+    uuid id PK
+    varchar name
+    varchar slug UK
+    text description
+    uuid parent_id FK
+  }
+
+  COURSES {
+    uuid id PK
+    varchar title
+    text description
+    text thumbnail_url
+    varchar level
+    varchar status
+    uuid instructor_id FK
+    uuid category_id FK
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MODULES {
+    uuid id PK
+    uuid course_id FK
+    varchar title
+    text description
+    smallint position
+    boolean is_published
+  }
+
+  LESSONS {
+    uuid id PK
+    uuid module_id FK
+    varchar title
+    text description
+    text video_url
+    integer duration_sec
+    smallint position
+    varchar type
+    boolean is_preview
+    boolean is_published
+  }
+
+  ENROLLMENTS {
+    uuid id PK
+    uuid user_id FK
+    uuid course_id FK
+    varchar status
+    numeric progress
+    timestamptz enrolled_at
+    timestamptz completed_at
+  }
+
+  LESSON_PROGRESS {
+    uuid id PK
+    uuid enrollment_id FK
+    uuid lesson_id FK
+    boolean is_completed
+    integer seconds_watched
+    timestamptz last_watched_at
+  }
+
+  CERTIFICATES {
+    uuid id PK
+    uuid enrollment_id FK
+    varchar code UK
+    text pdf_url
+    timestamptz issued_at
+  }
+
+  COMMENTS {
+    uuid id PK
+    uuid user_id FK
+    uuid lesson_id FK
+    uuid parent_id FK
+    text content
+    integer likes
+    timestamptz created_at
+  }
+
+  REVIEWS {
+    uuid id PK
+    uuid user_id FK
+    uuid course_id FK
+    smallint rating
+    text body
+    timestamptz created_at
+  }
+
+  USERS ||--o{ COURSES : teaches
+  CATEGORIES ||--o{ CATEGORIES : parent
+  CATEGORIES ||--o{ COURSES : groups
+  COURSES ||--o{ MODULES : contains
+  MODULES ||--o{ LESSONS : contains
+  USERS ||--o{ ENROLLMENTS : enrolls
+  COURSES ||--o{ ENROLLMENTS : receives
+  ENROLLMENTS ||--o{ LESSON_PROGRESS : tracks
+  LESSONS ||--o{ LESSON_PROGRESS : progresses
+  ENROLLMENTS ||--o| CERTIFICATES : issues
+  USERS ||--o{ COMMENTS : writes
+  LESSONS ||--o{ COMMENTS : receives
+  COMMENTS ||--o{ COMMENTS : replies
+  USERS ||--o{ REVIEWS : writes
+  COURSES ||--o{ REVIEWS : receives
+```
+
+### Reglas importantes del schema
+
+- Un usuario puede tener rol `student`, `instructor` o `admin`.
+- Un curso pertenece a un instructor y opcionalmente a una categoría.
+- Un curso contiene módulos; un módulo contiene lecciones.
+- Una inscripción une un usuario con un curso y mantiene `progress`.
+- `lesson_progress` recalcula automáticamente el progreso de la inscripción mediante trigger.
+- Un certificado pertenece a una inscripción completada y tiene código único.
+- Los comentarios soportan respuestas anidadas mediante `parent_id`.
+- Las reseñas son únicas por usuario y curso.
+
+---
+
+## Cómo se conectan las herramientas
+
+```mermaid
+flowchart LR
+  Dev["Desarrollador"] --> Mise["mise"]
+  Mise --> Java["Java 21"]
+  Mise --> Node["Node LTS"]
+  Mise --> Tasks["Tareas del proyecto"]
+
+  Tasks --> Compose["Docker Compose"]
+  Compose --> Pg["PostgreSQL 16"]
+  Compose --> App["Contenedor app"]
+
+  Tasks --> Spring["Spring Boot local"]
+  Tasks --> Vite["Vite dev server"]
+
+  Vite --> Spring
+  Spring --> Pg
+  App --> Pg
+```
+
+### Flujo con Docker
+
+```mermaid
+flowchart TB
+  Source["Código fuente"] --> Dockerfile["Dockerfile multi-stage"]
+
+  Dockerfile --> FrontBuild["Stage 1: node:lts-alpine"]
+  FrontBuild --> Dist["frontend/dist"]
+
+  Dockerfile --> BackBuild["Stage 2: eclipse-temurin:21-jdk-alpine"]
+  Dist --> BackBuild
+  BackBuild --> Jar["Spring Boot jar"]
+
+  Jar --> Runtime["Stage 3: eclipse-temurin:21-jre-alpine"]
+  Runtime --> Container["aprende_ues_app:8080"]
+  Compose["docker-compose.yml"] --> Container
+  Compose --> DB["aprende_ues_db:5432 interno / 5433 host"]
+```
+
+---
+
+## Requisitos previos
+
+- [mise](https://mise.jdx.dev/) para herramientas y tareas del proyecto.
+- [Docker](https://www.docker.com/) para PostgreSQL y stack contenerizado.
+- Git.
+
+El proyecto define las herramientas en `mise.toml`:
+
+```toml
+[tools]
+java = "temurin-21"
+node = "lts"
+```
+
+---
+
+## Configuración inicial
 
 ```bash
-# Clona el repositorio
 git clone <url-del-repositorio>
 cd DAW-Plataforma-Educativa-Grupo9
 
-# Autoriza el mise.toml del proyecto (medida de seguridad de mise)
 mise trust
-
-# Instala las herramientas definidas en mise.toml (Java 21)
 mise install
 ```
 
 ---
 
-## Levantar el proyecto
+## Ejecución
+
+### Desarrollo local
 
 ```bash
 mise run dev
 ```
 
-Esto ejecuta en orden:
+Este flujo levanta PostgreSQL con Docker, ejecuta backend y frontend en modo desarrollo y deja disponible Swagger UI para explorar la API.
 
-1. Levanta PostgreSQL en Docker en el puerto **5433**
-2. Arranca el backend de Spring Boot
-3. Aplica las migraciones de base de datos automáticamente con **Flyway**
-4. Abre el navegador en **Swagger UI** cuando el servidor esté listo
+### Stack completo con Docker
+
+```bash
+mise run app:up
+```
+
+Este comando construye la imagen de la aplicación, empaqueta el frontend dentro del backend y levanta:
+
+- App web: `http://localhost:8080`
+- API REST: `http://localhost:8080/api`
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- PostgreSQL host: `localhost:5433`
+
+Para detener el stack:
+
+```bash
+mise run app:down
+```
 
 ---
 
@@ -64,22 +389,28 @@ Esto ejecuta en orden:
 
 | Comando | Descripción |
 |---|---|
-| `mise run dev` | Inicia todo: base de datos + backend |
-| `mise run backend` | Solo el backend (requiere DB activa) |
-| `mise run db:up` | Solo levanta el contenedor de PostgreSQL |
-| `mise run db:down` | Detiene y elimina el contenedor |
-| `mise run db:logs` | Muestra los logs de PostgreSQL |
-| `mise run db:migrate` | Ejecuta las migraciones sin arrancar el backend |
+| `mise run dev` | Levanta DB, backend y frontend para desarrollo local |
+| `mise run app:up` | Construye y levanta app + DB con Docker Compose |
+| `mise run app:down` | Detiene el stack de Docker Compose |
+| `mise run app:logs` | Muestra logs de app y base de datos |
+| `mise run backend` | Ejecuta solo Spring Boot, requiere DB activa |
+| `mise run db:up` | Levanta PostgreSQL en Docker |
+| `mise run db:down` | Detiene y elimina los servicios de compose |
+| `mise run db:logs` | Muestra logs de PostgreSQL |
+| `mise run db:migrate` | Ejecuta migraciones sin levantar toda la app |
+| `mise run backend:test` | Ejecuta pruebas del backend |
 
 ---
 
-## URLs de desarrollo
+## URLs útiles
 
 | Servicio | URL |
 |---|---|
+| App web contenerizada | `http://localhost:8080` |
+| Frontend local Vite | `http://localhost:5173` |
 | API base | `http://localhost:8080/api` |
 | Swagger UI | `http://localhost:8080/swagger-ui.html` |
-| Actuator (health) | `http://localhost:8080/actuator/health` |
+| Actuator health | `http://localhost:8080/actuator/health` |
 
 ---
 
@@ -87,82 +418,87 @@ Esto ejecuta en orden:
 
 PostgreSQL corre en Docker con la siguiente configuración:
 
-| Parámetro | Valor |
+| Parámetro | Desarrollo local |
 |---|---|
 | Host | `localhost` |
-| Puerto | `5433` |
+| Puerto host | `5433` |
+| Puerto contenedor | `5432` |
 | Base de datos | `aprende_ues` |
 | Usuario | `aprende_ues` |
 | Contraseña | `aprende_ues` |
 
-> El puerto es **5433** (no 5432) para evitar conflictos con instalaciones locales de PostgreSQL.
+El backend usa variables de entorno con fallback:
 
-### Migraciones
-
-El schema se gestiona con **Flyway**. Cada cambio a la base de datos debe hacerse creando un nuevo archivo en:
-
+```properties
+DB_HOST=localhost
+DB_PORT=5433
+DB_NAME=aprende_ues
+DB_USER=aprende_ues
+DB_PASSWORD=aprende_ues
 ```
+
+En Docker Compose, el backend se conecta a `db:5432` dentro de la red de contenedores.
+
+---
+
+## Migraciones Flyway
+
+Las migraciones viven en:
+
+```text
 backend/src/main/resources/db/migration/
-├── V1__initial_schema.sql   ← tablas, enums, triggers
-└── V2__seed_data.sql        ← datos de prueba
+├── V1__initial_schema.sql
+├── V2__seed_data.sql
+├── V3__realistic_seed.sql
+├── V4__change_role_to_varchar.sql
+├── V5__create_categories_table.sql
+├── V6__repair_orphan_course_categories.sql
+├── V7__translate_seed_data_to_spanish.sql
+├── V8__change_enrollment_status_to_varchar.sql
+└── V9__add_matching_youtube_links_to_html_css_lessons.sql
 ```
 
-**Regla:** nunca modificar archivos `V` ya commiteados. Flyway verifica el checksum y fallará para todos los miembros del equipo.
+Regla de equipo: no modificar migraciones `V` ya aplicadas. Para cambios nuevos se agrega una migración nueva:
 
-Para agregar un cambio nuevo:
+```text
+V10__descripcion_del_cambio.sql
+V11__otra_mejora.sql
 ```
-V3__descripcion_del_cambio.sql
-V4__otra_migracion.sql
-```
+
+Flyway valida checksums y Spring Boot usa `spring.jpa.hibernate.ddl-auto=validate`, por lo que el schema real debe coincidir con las entidades JPA.
 
 ---
 
-## Arquitectura del Backend
+## API principal
 
-```
-backend/src/main/java/com/aprende/ues/backend/
-├── config/       ← Configuración de Swagger/OpenAPI
-├── controller/   ← Endpoints REST con anotaciones @Operation @Tag
-├── dto/          ← Objetos de transferencia (Request/Response)
-├── model/        ← Entidades JPA y enums
-│   └── enums/
-├── repository/   ← Interfaces JpaRepository
-└── service/      ← Lógica de negocio y mapeo Entity ↔ DTO
-```
-
----
-
-## Stack Tecnológico
-
-| Capa | Tecnología |
+| Recurso | Endpoint base |
 |---|---|
-| Backend | Spring Boot 3.5 + Java 21 |
-| Persistencia | Spring Data JPA + Hibernate 6 |
-| Base de datos | PostgreSQL 16 |
-| Migraciones | Flyway |
-| Documentación | SpringDoc OpenAPI (Swagger UI) |
-| Contenedores | Docker / Docker Compose |
-| Gestión de entorno | mise |
+| Usuarios | `/api/users` |
+| Categorías | `/api/categories` |
+| Cursos | `/api/courses` |
+| Módulos | `/api/modules` |
+| Lecciones | `/api/lessons` |
+| Inscripciones | `/api/enrollments` |
+| Progreso de lección | `/api/lesson-progress` |
+| Certificados | `/api/certificates` |
+| Comentarios | `/api/comments` |
+| Reseñas | `/api/reviews` |
 
----
+Swagger UI está disponible en:
 
-## Funcionalidades planeadas
-
-- [ ] Sistema de cursos y módulos
-- [ ] Reproductor de video con control de avance
-- [ ] Seguimiento de progreso por usuario
-- [ ] Sistema de certificados
-- [ ] Panel administrativo
+```text
+http://localhost:8080/swagger-ui.html
+```
 
 ---
 
 ## Convención de commits
 
-Este proyecto usa [Conventional Commits](https://www.conventionalcommits.org/):
+Este proyecto usa Conventional Commits:
 
-```
-feat: agrega endpoint de creación de cursos
-fix: corrige validación de UUID en CourseController
-chore: actualiza dependencia de Flyway
-docs: actualiza README con pasos de instalación
+```text
+feat: agrega emisión de certificados
+fix: corrige cálculo de progreso por inscripción
+docs: actualiza README con arquitectura
+chore: actualiza configuración de Docker
 ```

@@ -456,6 +456,7 @@ function App() {
         course={selectedCourse}
         lesson={activeLesson}
         lessons={appLessons}
+        modules={appModules}
         onSelectLesson={setActiveLesson}
         onComplete={markCompleted}
         completedMessage={completedMessage}
@@ -1024,7 +1025,7 @@ function CourseDetailView({ course, modules, lessons, reviews, onBack, onStart, 
   )
 }
 
-function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, completedMessage, user }) {
+function PlayerView({ course, lesson, lessons, modules, onSelectLesson, onComplete, completedMessage, user }) {
   const [activeTab, setActiveTab] = useState('description')
   const [comments, setComments] = useState([])
   const [commentUsers, setCommentUsers] = useState([])
@@ -1046,13 +1047,18 @@ function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, compl
 
   useEffect(() => {
     if (!lesson?.id) return
-    setCommentError('')
+      const timer = setTimeout(() => {
+      setCommentError('')
+    }, 0)
+
     Promise.all([api.getComments(), api.getUsers()])
       .then(([commentsDto, usersDto]) => {
         setComments(commentsDto.filter((c) => c.lessonId === lesson.id))
         setCommentUsers(usersDto)
       })
       .catch(() => {})
+
+      return () => clearTimeout(timer)
   }, [lesson?.id])
 
   const refreshComments = async () => {
@@ -1102,6 +1108,8 @@ function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, compl
   }
 
   if (!course || !lesson) return null
+
+  const currentModule = modules?.find((m) => m.id === lesson?.moduleId)
 
   return (
     <main className="page player-page">
@@ -1255,7 +1263,7 @@ function PlayerView({ course, lesson, lessons, onSelectLesson, onComplete, compl
           </section>
         </div>
 
-        <LessonList lessons={lessons} onSelect={onSelectLesson} />
+        <LessonList lessons={lessons} onSelect={onSelectLesson} moduleTitle={currentModule?.title} />
       </section>
     </main>
   )

@@ -1111,6 +1111,10 @@ function PlayerView({ course, lesson, lessons, modules, onSelectLesson, onComple
 
   const currentModule = modules?.find((m) => m.id === lesson?.moduleId)
 
+  const lessonsWithActiveStatus = lessons.map((l) =>
+  l.id === lesson?.id ? { ...l, status: 'active' } : l
+  )
+
   return (
     <main className="page player-page">
       {completedMessage ? <div className="toast">{completedMessage}</div> : null}
@@ -1263,7 +1267,7 @@ function PlayerView({ course, lesson, lessons, modules, onSelectLesson, onComple
           </section>
         </div>
 
-        <LessonList lessons={lessons} onSelect={onSelectLesson} moduleTitle={currentModule?.title} />
+        <LessonList lessons={lessonsWithActiveStatus} onSelect={onSelectLesson} moduleTitle={currentModule?.title} />
       </section>
     </main>
   )

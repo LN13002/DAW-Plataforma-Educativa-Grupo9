@@ -7,15 +7,18 @@ const statusIcon = {
   locked: ['lock', false],
 }
 
-export function LessonList({ lessons, onSelect }) {
+export function LessonList({ lessons, onSelect, moduleTitle }) {
+
+  const completedCount = lessons.filter((l) => l.status === 'completed').length
+
   return (
     <aside className="lesson-panel">
       <div className="lesson-panel-header">
         <h2>Contenido del curso</h2>
-        <span>8/14 lecciones</span>
+        <span>{completedCount}/{lessons.length} lecciones</span>
       </div>
 
-      <div className="module-title">Modulo 4: Microservicios</div>
+      <div className="module-title">{moduleTitle ?? 'Módulo sin identificar'}</div>
 
       <div className="lesson-list">
         {lessons.map((lesson) => {

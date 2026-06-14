@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '../../components/Button'
 import { Icon } from '../../components/Icon'
-import { api } from '../../services/api' // Usando tu puente real con fetch
+import { api } from '../../services/api'
 
 export function CategoriesPage() {
   const [categories, setCategories] = useState([])
@@ -9,8 +9,8 @@ export function CategoriesPage() {
   const [selected, setSelected] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  // Campos exactos de tu CategoryRequestDTO
   const [form, setForm] = useState({
     name: '',
     slug: '',
@@ -18,7 +18,6 @@ export function CategoriesPage() {
     parentId: null
   })
 
-  // 1. CARGAR DATOS AL INICIAR
   useEffect(() => {
     loadCategories()
   }, [])
@@ -28,14 +27,14 @@ export function CategoriesPage() {
     try {
       const data = await api.getCategories()
       setCategories(data)
+      setError('')
     } catch (err) {
-      console.error("Error al cargar categorías:", err)
+      setError('No se pudieron cargar las categorías.')
     } finally {
       setLoading(false)
     }
   }
 
-  // 2. LÓGICA DE FORMULARIO
   const openCreate = () => {
     setForm({ name: '', slug: '', description: '', parentId: null })
     setSelected(null)
@@ -62,9 +61,10 @@ export function CategoriesPage() {
         await api.updateCategory(selected.id, form)
       }
       setFormMode(null)
-      loadCategories() // Refrescar desde el backend
+      setError('')
+      loadCategories()
     } catch (err) {
-      alert("Error al guardar: Revisa que el slug sea único (ej: 'programacion-java')")
+      setError("No se pudo guardar la categoría. Revisa que el slug sea único, por ejemplo 'programacion-java'.")
     }
   }
 
@@ -72,13 +72,13 @@ export function CategoriesPage() {
     try {
       await api.deleteCategory(deleteTarget.id)
       setDeleteTarget(null)
+      setError('')
       loadCategories()
     } catch (err) {
-      alert("No se pudo eliminar la categoría. Asegúrate de que no tenga cursos asociados.")
+      setError('No se pudo eliminar la categoría. Revisa si tiene cursos asociados.')
     }
   }
 
-  // Función para auto-generar el slug mientras escribes el nombre
   const handleNameChange = (e) => {
     const name = e.target.value
     const slug = name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '')
@@ -88,28 +88,31 @@ export function CategoriesPage() {
   return (
     <main className="page">
       <section className="page-header">
-        <span className="eyebrow">/api/categories</span>
-        <h1>Gestión de Categorías</h1>
+        <span className="eyebrow">Catálogo académico</span>
+        <h1>Gestión de categorías</h1>
         <p>Organiza los cursos de Aprende UES por áreas de conocimiento.</p>
       </section>
+
+      {error ? <div className="data-notice">{error}</div> : null}
 
       {formMode ? (
         <section className="admin-panel" style={{ marginBottom: '2rem' }}>
           <div className="admin-panel-header">
             <div>
-              <span className="eyebrow">{formMode === 'create' ? 'POST' : 'PUT'}</span>
-              <h2>{formMode === 'create' ? 'Nueva Categoría' : 'Editar Categoría'}</h2>
+              <span className="eyebrow">{formMode === 'create' ? 'Nueva área' : 'Actualizar área'}</span>
+              <h2>{formMode === 'create' ? 'Crear categoría' : 'Editar categoría'}</h2>
+              <p>Usa categorías claras para que estudiantes y docentes encuentren cursos sin adivinar.</p>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.2rem', maxWidth: '500px', padding: '20px' }}>
             <label className="form-label">
-              Nombre de la Categoría
+              Nombre de la categoría
               <input className="form-input" value={form.name} onChange={handleNameChange} required placeholder="Ej. Ciencias de la Computación" />
             </label>
 
             <label className="form-label">
-              Slug (Identificador en URL)
+              Slug para URL
               <input className="form-input" value={form.slug} onChange={(e) => setForm({...form, slug: e.target.value})} required placeholder="ej-ciencias-computacion" />
             </label>
 
@@ -119,11 +122,11 @@ export function CategoriesPage() {
             </label>
 
             <label className="form-label">
-              Categoría Superior (Opcional)
+              Categoría superior (opcional)
               <select className="form-input" value={form.parentId || ''} onChange={(e) => setForm({...form, parentId: e.target.value || null})}>
-                <option value="">-- Ninguna (Categoría Raíz) --</option>
+                <option value="">Ninguna, es categoría principal</option>
                 {categories
-                  .filter(c => c.id !== selected?.id) // No puede ser su propio padre
+                  .filter(c => c.id !== selected?.id)
                   .map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))
@@ -143,12 +146,18 @@ export function CategoriesPage() {
 
       <section className="admin-panel">
         <div className="admin-panel-header">
-          <h2>Listado de Categorías</h2>
-          <Button onClick={openCreate}><Icon name="add" /> Nueva Categoría</Button>
+          <div>
+            <span className="eyebrow">Áreas disponibles</span>
+            <h2>Categorías publicadas</h2>
+            <p>Estas categorías alimentan los filtros del catálogo que ve el estudiante.</p>
+          </div>
+          <Button onClick={openCreate}><Icon name="add" /> Nueva categoría</Button>
         </div>
 
         <div className="admin-table-wrap">
-          {loading ? <p style={{padding: '20px'}}>Cargando datos desde el servidor...</p> : (
+          {loading ? <p style={{padding: '20px'}}>Cargando categorías...</p> : categories.length === 0 ? (
+            <div className="comment-empty-state">Aún no hay categorías creadas.</div>
+          ) : (
             <table className="admin-table">
               <thead>
                 <tr>
@@ -178,11 +187,10 @@ export function CategoriesPage() {
         </div>
       </section>
 
-      {/* MODAL ELIMINAR */}
       {deleteTarget && (
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div className="auth-card" style={{ maxWidth: '380px' }}>
-            <h2>Eliminar Categoría</h2>
+            <h2>Eliminar categoría</h2>
             <p>¿Estás seguro de borrar <strong>{deleteTarget.name}</strong>? Los cursos asociados podrían quedar sin categoría.</p>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
               <Button onClick={confirmDelete}><Icon name="delete" /> Confirmar</Button>

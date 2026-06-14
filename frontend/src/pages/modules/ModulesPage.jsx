@@ -1,275 +1,194 @@
-// ============================================================
-// ModulesPage.jsx
-// Página de gestión de módulos - CRUD completo
-// Entidad: Module | Endpoint: /api/modules
-// Autor: Kevin González
-// ============================================================
+import { useEffect, useMemo, useState } from 'react'
+import { api } from '../../services/api'
+import {
+  getCourseTitle,
+  ModuleDeleteDialog,
+  ModuleForm,
+  ModuleList,
+  ModuleSummary,
+} from './ModuleAdminSections'
 
-import { useState } from 'react'
-import { Button } from '../../components/Button'
-import { Icon } from '../../components/Icon'
-import { backendResources } from '../../data/mockData'
+const emptyForm = {
+  courseId: '',
+  title: '',
+  description: '',
+  position: '1',
+  published: 'true',
+}
 
-// Datos mock obtenidos del archivo mockData.js
-// En producción estos datos vendrían de: GET /api/modules
-const mockModules = backendResources.find((r) => r.key === 'modules').records
-
-export function ModulesPage() {
-  // Estado principal de la lista de módulos
-  const [modules, setModules] = useState(mockModules)
-
-  // Estado del formulario: 'create' | 'edit' | null
+export function ModulesPage({ allowedCourseIds = null }) {
+  const [modules, setModules] = useState([])
+  const [courses, setCourses] = useState([])
   const [formMode, setFormMode] = useState(null)
-
-  // Módulo seleccionado para editar
   const [selected, setSelected] = useState(null)
-
-  // Módulo seleccionado para eliminar
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [form, setForm] = useState(emptyForm)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [courseFilter, setCourseFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
 
-  // Campos del formulario
-  const [form, setForm] = useState({ courseTitle: '', title: '', position: '', published: 'false' })
+  const coursesById = useMemo(() => new Map(courses.map((course) => [course.id, course])), [courses])
+  const selectedCourse = form.courseId ? coursesById.get(form.courseId) : null
+  const visibleCourses = useMemo(
+    () => (allowedCourseIds ? courses.filter((course) => allowedCourseIds.has(course.id)) : courses),
+    [allowedCourseIds, courses]
+  )
 
-  // Errores de validación del formulario
-  const [errors, setErrors] = useState({})
+  const filteredModules = useMemo(() => {
+    const query = search.trim().toLowerCase()
 
-  // Mensaje de éxito temporal
-  const [successMsg, setSuccessMsg] = useState('')
+    return modules
+      .filter((module) => {
+        if (allowedCourseIds && !allowedCourseIds.has(module.courseId)) return false
+        const courseTitle = module.courseTitle ?? getCourseTitle(coursesById.get(module.courseId))
+        const matchesCourse = courseFilter === 'all' || module.courseId === courseFilter
+        const matchesStatus =
+          statusFilter === 'all' ||
+          (statusFilter === 'published' && module.published) ||
+          (statusFilter === 'draft' && !module.published)
+        const matchesSearch =
+          !query ||
+          module.title.toLowerCase().includes(query) ||
+          (module.description ?? '').toLowerCase().includes(query) ||
+          courseTitle.toLowerCase().includes(query)
 
-  // Valida que los campos requeridos no estén vacíos
-  const validate = () => {
-    const newErrors = {}
-    if (!form.courseTitle.trim()) newErrors.courseTitle = 'El curso es requerido'
-    if (!form.title.trim()) newErrors.title = 'El título es requerido'
-    if (!form.position || isNaN(form.position)) newErrors.position = 'La posición debe ser un número'
-    return newErrors
+        return matchesCourse && matchesStatus && matchesSearch
+      })
+      .sort((a, b) => {
+        const courseCompare = (a.courseTitle ?? '').localeCompare(b.courseTitle ?? '')
+        return courseCompare || Number(a.position ?? 0) - Number(b.position ?? 0)
+      })
+  }, [allowedCourseIds, courseFilter, coursesById, modules, search, statusFilter])
+
+  const stats = useMemo(() => {
+    const visible = allowedCourseIds ? modules.filter((module) => allowedCourseIds.has(module.courseId)) : modules
+    const published = visible.filter((module) => module.published).length
+
+    return {
+      total: visible.length,
+      published,
+      drafts: visible.length - published,
+      courseCount: new Set(visible.map((module) => module.courseId)).size,
+    }
+  }, [allowedCourseIds, modules])
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const field = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))
+
+  async function loadData() {
+    setLoading(true)
+    try {
+      const [modulesDto, coursesDto] = await Promise.all([api.getModules(), api.getCourses()])
+      setModules(modulesDto)
+      setCourses(coursesDto)
+      setError('')
+    } catch {
+      setError('No se pudieron cargar los módulos.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // Muestra mensaje de éxito temporal por 3 segundos
-  const showSuccess = (msg) => {
-    setSuccessMsg(msg)
-    setTimeout(() => setSuccessMsg(''), 3000)
-  }
-
-  // Abre el formulario en modo creación — equivalente a POST /api/modules
-  const openCreate = () => {
-    setForm({ courseTitle: '', title: '', position: '', published: 'false' })
-    setErrors({})
+  function closeForm() {
+    setFormMode(null)
     setSelected(null)
+    setForm(emptyForm)
+  }
+
+  function openCreate() {
+    setSelected(null)
+    setForm({
+      ...emptyForm,
+      courseId: visibleCourses[0]?.id ?? '',
+      position: String(Math.max(1, modules.length + 1)),
+    })
     setFormMode('create')
   }
 
-  // Abre el formulario en modo edición — equivalente a PUT /api/modules/:id
-  const openEdit = (module) => {
-    setForm({ ...module })
-    setErrors({})
+  function openEdit(module) {
     setSelected(module)
+    setForm({
+      courseId: module.courseId,
+      title: module.title,
+      description: module.description ?? '',
+      position: String(module.position),
+      published: String(Boolean(module.published)),
+    })
     setFormMode('edit')
   }
 
-  // Maneja el envío del formulario para crear o editar un módulo
-  const handleSubmit = (e) => {
-    e.preventDefault()
-
-    // Ejecuta validación antes de guardar
-    const validationErrors = validate()
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors)
-      return
+  async function submit(event) {
+    event.preventDefault()
+    const payload = {
+      courseId: form.courseId,
+      title: form.title,
+      description: form.description,
+      position: Number(form.position),
+      published: form.published === 'true',
     }
 
-    if (formMode === 'create') {
-      // Simula POST /api/modules — crea nuevo módulo con id autoincremental
-      const newModule = { ...form, id: `MOD-${String(modules.length + 1).padStart(3, '0')}` }
-      setModules([...modules, newModule])
-      showSuccess('Módulo creado exitosamente')
-    } else {
-      // Simula PUT /api/modules/:id — actualiza módulo existente
-      setModules(modules.map((m) => (m.id === selected.id ? { ...selected, ...form } : m)))
-      showSuccess('Módulo actualizado exitosamente')
+    try {
+      if (formMode === 'create') await api.createModule(payload)
+      else await api.updateModule(selected.id, payload)
+      closeForm()
+      await loadData()
+    } catch {
+      setError('No se pudo guardar el módulo. Verifica el curso, título y posición.')
     }
-
-    setFormMode(null)
   }
 
-  // Confirma y ejecuta el DELETE del módulo seleccionado
-  const confirmDelete = () => {
-    setModules(modules.filter((m) => m.id !== deleteTarget.id))
-    setDeleteTarget(null)
-    showSuccess('Módulo eliminado')
+  async function remove() {
+    try {
+      await api.deleteModule(deleteTarget.id)
+      setDeleteTarget(null)
+      await loadData()
+    } catch {
+      setError('No se pudo eliminar el módulo. Revisa si tiene lecciones asociadas.')
+    }
   }
 
   return (
-    <main className="page">
-
-      {/* Toast de éxito — aparece temporalmente tras cada operación */}
-      {successMsg ? (
-        <div style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          background: '#2d6a4f',
-          color: 'white',
-          padding: '0.75rem 1.25rem',
-          borderRadius: '8px',
-          zIndex: 200,
-          fontWeight: '600'
-        }}>
-          {successMsg}
-        </div>
-      ) : null}
-
-      {/* Encabezado de la página */}
+    <main className="page modules-admin-page">
       <section className="page-header">
-        <span className="eyebrow">/api/modules</span>
+        <span className="eyebrow">Arquitectura de cursos</span>
         <h1>Módulos</h1>
-        <p>Bloques de contenido ordenados dentro de cada curso. Total: {modules.length} módulos registrados.</p>
+        <p>Organiza cada curso en bloques claros, ordenados y listos para que el estudiante avance sin perderse.</p>
       </section>
 
-      {/* Formulario — se muestra al crear (POST) o editar (PUT) */}
+      {error ? <div className="data-notice">{error}</div> : null}
+      <ModuleSummary stats={stats} />
       {formMode ? (
-        <section className="admin-panel" style={{ marginBottom: '2rem' }}>
-          <div className="admin-panel-header">
-            <div>
-              <span className="eyebrow">{formMode === 'create' ? 'POST /api/modules' : 'PUT /api/modules/:id'}</span>
-              <h2>{formMode === 'create' ? 'Crear módulo' : 'Editar módulo'}</h2>
-            </div>
-          </div>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '480px' }}>
-            <label>
-              Curso
-              <input
-                value={form.courseTitle}
-                onChange={(e) => setForm({ ...form, courseTitle: e.target.value })}
-                placeholder="Nombre del curso"
-              />
-              {/* Mensaje de error de validación */}
-              {errors.courseTitle ? <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.courseTitle}</span> : null}
-            </label>
-            <label>
-              Título del módulo
-              <input
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Ej. Fundamentos"
-              />
-              {errors.title ? <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.title}</span> : null}
-            </label>
-            <label>
-              Posición
-              <input
-                type="number"
-                value={form.position}
-                onChange={(e) => setForm({ ...form, position: e.target.value })}
-                placeholder="1"
-              />
-              {errors.position ? <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.position}</span> : null}
-            </label>
-            <label>
-              Publicado
-              <select value={form.published} onChange={(e) => setForm({ ...form, published: e.target.value })}>
-                <option value="true">Sí</option>
-                <option value="false">No</option>
-              </select>
-            </label>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <Button type="submit">
-                <Icon name={formMode === 'create' ? 'add' : 'save'} />
-                {formMode === 'create' ? 'Crear' : 'Guardar'}
-              </Button>
-              <Button variant="secondary" onClick={() => setFormMode(null)}>
-                Cancelar
-              </Button>
-            </div>
-          </form>
-        </section>
+        <ModuleForm
+          form={form}
+          formMode={formMode}
+          selectedCourse={selectedCourse}
+          visibleCourses={visibleCourses}
+          onCancel={closeForm}
+          onChange={field}
+          onSubmit={submit}
+        />
       ) : null}
-
-      {/* Tabla principal — equivalente a GET /api/modules */}
-      <section className="admin-panel">
-        <div className="admin-panel-header">
-          <div>
-            <span className="eyebrow">GET /api/modules</span>
-            <h2>Listado de módulos</h2>
-          </div>
-          <Button onClick={openCreate}>
-            <Icon name="add" />
-            Crear módulo
-          </Button>
-        </div>
-
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Curso</th>
-                <th>Título</th>
-                <th>Posición</th>
-                <th>Publicado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Si no hay módulos, muestra mensaje vacío */}
-              {modules.length === 0 ? (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
-                    No hay módulos registrados.
-                  </td>
-                </tr>
-              ) : (
-                modules.map((module) => (
-                  <tr key={module.id}>
-                    <td>{module.id}</td>
-                    <td>{module.courseTitle}</td>
-                    <td>{module.title}</td>
-                    <td>{module.position}</td>
-                    <td>
-                      <span style={{ color: module.published === 'true' ? 'var(--color-success, green)' : 'var(--color-muted, gray)' }}>
-                        {module.published === 'true' ? 'Sí' : 'No'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="row-actions">
-                        {/* Botón editar — abre formulario en modo PUT */}
-                        <button type="button" aria-label="Editar" onClick={() => openEdit(module)}>
-                          <Icon name="edit" />
-                        </button>
-                        {/* Botón eliminar — abre modal de confirmación DELETE */}
-                        <button type="button" aria-label="Eliminar" onClick={() => setDeleteTarget(module)}>
-                          <Icon name="delete" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* Modal de confirmación — equivalente a DELETE /api/modules/:id */}
-      {deleteTarget ? (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="auth-card" style={{ maxWidth: '360px', width: '100%' }}>
-            <div className="auth-card-header">
-              <h2>Eliminar módulo</h2>
-              <p>¿Estás seguro que deseas eliminar <strong>{deleteTarget.title}</strong>? Esta acción no se puede deshacer.</p>
-            </div>
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-              <Button onClick={confirmDelete}>
-                <Icon name="delete" />
-                Eliminar
-              </Button>
-              <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-                Cancelar
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ModuleList
+        courseFilter={courseFilter}
+        coursesById={coursesById}
+        filteredModules={filteredModules}
+        loading={loading}
+        onCreate={openCreate}
+        onDelete={setDeleteTarget}
+        onEdit={openEdit}
+        onSearchChange={(event) => setSearch(event.target.value)}
+        onStatusFilterChange={setStatusFilter}
+        onCourseFilterChange={(event) => setCourseFilter(event.target.value)}
+        search={search}
+        statusFilter={statusFilter}
+        visibleCourses={visibleCourses}
+      />
+      <ModuleDeleteDialog module={deleteTarget} onCancel={() => setDeleteTarget(null)} onConfirm={remove} />
     </main>
   )
 }

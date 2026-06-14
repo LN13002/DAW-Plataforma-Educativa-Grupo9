@@ -20,10 +20,12 @@ export function CourseCard({ course, compact = false, onOpen, actionLabel = 'Ver
           <ProgressBar value={course.progress} label="Curso" />
         ) : (
           <div className="course-stats">
-            <span>
-              <Icon name="star" filled />
-              {course.rating}
-            </span>
+            {course.rating ? (
+              <span>
+                <Icon name="star" filled />
+                {course.rating}
+              </span>
+            ) : null}
             <span>{course.duration} de contenido</span>
           </div>
         )}

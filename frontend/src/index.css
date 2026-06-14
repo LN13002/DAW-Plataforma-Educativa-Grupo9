@@ -719,15 +719,21 @@ h3,
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: 1fr;
   gap: 28px;
 }
 
-.content-stack,
-.side-stack {
+.content-stack {
   display: grid;
   align-content: start;
   gap: 24px;
+}
+
+.side-stack {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
 }
 
 .section-block,
@@ -3273,7 +3279,10 @@ h3,
   }
 
   .side-stack {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    align-items: start;
   }
 
   .mini-panel {

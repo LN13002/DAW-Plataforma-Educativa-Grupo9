@@ -91,6 +91,8 @@ export function HomeView({
         </div>
       </section>
 
+      <DashboardSidePanel courses={courses} certificates={certificates} />
+
       <section className="dashboard-grid">
         <div className="content-stack">
           {currentCourse ? (
@@ -128,8 +130,6 @@ export function HomeView({
             </div>
           </section>
         </div>
-
-        <DashboardSidePanel courses={courses} certificates={certificates} />
       </section>
     </main>
   )

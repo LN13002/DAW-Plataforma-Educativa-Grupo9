@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Button } from '../components/Button'
 import { CategoryPills } from '../components/CategoryPills'
 import { CourseCard } from '../components/CourseCard'
@@ -209,25 +210,34 @@ function RoleHomeView({ user, title, description, stats, actions, courses, onOpe
 
 function DashboardSidePanel({ courses, certificates }) {
   const { inProgressCourses, completedCourses, certificatesCount } = getLearnerStats(courses, certificates)
+  const [showCertificates, setShowCertificates] = useState(false)
 
   return (
     <aside className="side-stack">
       <StatCard icon="pending_actions" value={String(inProgressCourses.length).padStart(2, '0')} label="Cursos en progreso" />
       <StatCard icon="task_alt" value={String(completedCourses.length).padStart(2, '0')} label="Completados" />
-      <StatCard icon="workspace_premium" value={String(certificatesCount).padStart(2, '0')} label="Certificados" />
-
-      <section className="mini-panel">
-        <h2>Certificados recientes</h2>
-        {certificates.length > 0 ? (
-          certificates.slice(0, 3).map((certificate) => (
-            <a href={certificate.downloadUrl} key={certificate.id} download>
-              {certificate.title}
-            </a>
-          ))
-        ) : (
-          <p>Aún no tienes certificados emitidos.</p>
-        )}
-      </section>
+      <div style={{ display: 'grid', gap: '12px' }}>
+        <StatCard
+          icon="workspace_premium"
+          value={String(certificatesCount).padStart(2, '0')}
+          label="Certificados"
+          onClick={() => setShowCertificates((prev) => !prev)}
+        />
+        {showCertificates ? (
+          <section className="mini-panel">
+            <h2>Certificados recientes</h2>
+            {certificates.length > 0 ? (
+              certificates.slice(0, 3).map((certificate) => (
+                <a href={certificate.downloadUrl} key={certificate.id} download>
+                  {certificate.title}
+                </a>
+              ))
+            ) : (
+              <p>Aún no tienes certificados emitidos.</p>
+            )}
+          </section>
+        ) : null}
+      </div>
     </aside>
   )
 }

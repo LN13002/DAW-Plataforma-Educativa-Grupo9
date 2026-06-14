@@ -1,346 +1,190 @@
-import { useEffect, useMemo, useState } from 'react'
+// ============================================================
+// CommentsPage.jsx
+// Página de gestión de comentarios - CRUD completo
+// Entidad: Comment | Endpoint: /api/comments
+// Autor: Kevin González
+// ============================================================
+
+import { useState } from 'react'
 import { Button } from '../../components/Button'
 import { Icon } from '../../components/Icon'
-import { api } from '../../services/api'
+import { backendResources } from '../../data/mockData'
 
-const emptyForm = {
-  userId: '',
-  lessonId: '',
-  parentId: '',
-  content: '',
-}
-
-function getUserName(user) {
-  return `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.email || 'Usuario sin identificar'
-}
-
-function getLessonContext(comment, lessonsById, modulesById) {
-  const lesson = lessonsById.get(comment.lessonId)
-  const module = lesson ? modulesById.get(lesson.moduleId) : null
-  return {
-    lesson,
-    module,
-    title: lesson?.title ?? 'Lección sin identificar',
-    subtitle: module ? `${module.courseTitle ?? 'Curso'} · ${module.title}` : 'Contexto no disponible',
-  }
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString('es-SV', { dateStyle: 'medium', timeStyle: 'short' }) : '-'
-}
+// Datos mock obtenidos del archivo mockData.js
+// En producción estos datos vendrían de: GET /api/comments
+const mockComments = backendResources.find((r) => r.key === 'comments').records
 
 export function CommentsPage() {
-  const [comments, setComments] = useState([])
-  const [users, setUsers] = useState([])
-  const [lessons, setLessons] = useState([])
-  const [modules, setModules] = useState([])
+  // Estado principal de la lista de comentarios
+  const [comments, setComments] = useState(mockComments)
+
+  // Estado del formulario: 'create' | 'edit' | null
   const [formMode, setFormMode] = useState(null)
-  const [selectedComment, setSelectedComment] = useState(null)
+
+  // Comentario seleccionado para editar
+  const [selected, setSelected] = useState(null)
+
+  // Comentario seleccionado para eliminar
   const [deleteTarget, setDeleteTarget] = useState(null)
-  const [form, setForm] = useState(emptyForm)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [scopeFilter, setScopeFilter] = useState('all')
 
-  const usersById = useMemo(() => new Map(users.map((user) => [user.id, user])), [users])
-  const lessonsById = useMemo(() => new Map(lessons.map((lesson) => [lesson.id, lesson])), [lessons])
-  const modulesById = useMemo(() => new Map(modules.map((module) => [module.id, module])), [modules])
-  const commentsById = useMemo(() => new Map(comments.map((comment) => [comment.id, comment])), [comments])
-  const adminUsers = useMemo(() => users.filter((user) => user.role === 'admin' || user.role === 'ADMIN'), [users])
-  const regularUsers = useMemo(() => users.filter((user) => user.role !== 'admin' && user.role !== 'ADMIN'), [users])
+  // Campos del formulario
+  const [form, setForm] = useState({ userId: '', lessonId: '', parentId: '-', content: '', likes: '0' })
 
-  const selectedLessonContext = form.lessonId
-    ? getLessonContext({ lessonId: form.lessonId }, lessonsById, modulesById)
-    : null
-  const selectedParent = form.parentId ? commentsById.get(form.parentId) : null
-  const isMediationMode = formMode === 'mediate'
-  const isEditMode = formMode === 'edit'
+  // Errores de validación del formulario
+  const [errors, setErrors] = useState({})
 
-  const field = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }))
+  // Mensaje de éxito temporal
+  const [successMsg, setSuccessMsg] = useState('')
 
-  const loadData = async () => {
-    setLoading(true)
-    try {
-      const [commentsDto, usersDto, lessonsDto, modulesDto] = await Promise.all([
-        api.getComments(),
-        api.getUsers(),
-        api.getLessons(),
-        api.getModules(),
-      ])
-      setComments(commentsDto)
-      setUsers(usersDto)
-      setLessons(lessonsDto)
-      setModules(modulesDto)
-      setError('')
-    } catch {
-      setError('No se pudieron cargar los comentarios desde la API.')
-    } finally {
-      setLoading(false)
-    }
+  // Valida que los campos requeridos no estén vacíos
+  const validate = () => {
+    const newErrors = {}
+    if (!form.userId.trim()) newErrors.userId = 'El usuario es requerido'
+    if (!form.lessonId.trim()) newErrors.lessonId = 'La lección es requerida'
+    if (!form.content.trim()) newErrors.content = 'El contenido es requerido'
+    return newErrors
   }
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  useEffect(() => {
-    if (!form.userId && formMode === 'mediate' && adminUsers.length > 0) {
-      setForm((prev) => ({ ...prev, userId: adminUsers[0].id }))
-    }
-    if (!form.userId && formMode === 'create' && regularUsers.length > 0) {
-      setForm((prev) => ({ ...prev, userId: regularUsers[0].id }))
-    }
-  }, [adminUsers, form.userId, formMode, regularUsers])
-
-  const closeForm = () => {
-    setFormMode(null)
-    setSelectedComment(null)
-    setForm(emptyForm)
+  // Muestra mensaje de éxito temporal por 3 segundos
+  const showSuccess = (msg) => {
+    setSuccessMsg(msg)
+    setTimeout(() => setSuccessMsg(''), 3000)
   }
 
-  const openUserComment = () => {
-    setSelectedComment(null)
-    setForm({
-      userId: regularUsers[0]?.id ?? '',
-      lessonId: '',
-      parentId: '',
-      content: '',
-    })
+  // Abre el formulario en modo creación — equivalente a POST /api/comments
+  const openCreate = () => {
+    setForm({ userId: '', lessonId: '', parentId: '-', content: '', likes: '0' })
+    setErrors({})
+    setSelected(null)
     setFormMode('create')
   }
 
-  const openEditComment = (comment) => {
-    setSelectedComment(comment)
-    setForm({
-      userId: comment.userId,
-      lessonId: comment.lessonId,
-      parentId: comment.parentId ?? '',
-      content: comment.content,
-    })
+  // Abre el formulario en modo edición — equivalente a PUT /api/comments/:id
+  const openEdit = (comment) => {
+    setForm({ ...comment })
+    setErrors({})
+    setSelected(comment)
     setFormMode('edit')
   }
 
-  const openMediation = (comment = null) => {
-    const admin = adminUsers[0]
-    setSelectedComment(null)
-    setForm({
-      userId: admin?.id ?? '',
-      lessonId: comment?.lessonId ?? '',
-      parentId: comment?.id ?? '',
-      content: '',
-    })
-    setFormMode('mediate')
-  }
+  // Maneja el envío del formulario para crear o editar un comentario
+  const handleSubmit = (e) => {
+    e.preventDefault()
 
-  const submit = async (event) => {
-    event.preventDefault()
-    try {
-      const payload = {
-        userId: form.userId,
-        lessonId: form.lessonId,
-        parentId: form.parentId || null,
-        content: form.content,
-      }
-
-      if (isEditMode) {
-        await api.updateComment(selectedComment.id, payload)
-      } else {
-        await api.createComment(payload)
-      }
-
-      closeForm()
-      await loadData()
-    } catch {
-      setError('No se pudo guardar el comentario. Revisa usuario, lección y contenido.')
+    // Ejecuta validación antes de guardar
+    const validationErrors = validate()
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      return
     }
-  }
 
-  const remove = async () => {
-    try {
-      await api.deleteComment(deleteTarget.id)
-      setDeleteTarget(null)
-      await loadData()
-    } catch {
-      setError('No se pudo eliminar el comentario.')
+    if (formMode === 'create') {
+      // Simula POST /api/comments — crea nuevo comentario con id autoincremental
+      const newComment = { ...form, id: `COM-${String(comments.length + 1).padStart(3, '0')}` }
+      setComments([...comments, newComment])
+      showSuccess('Comentario publicado exitosamente')
+    } else {
+      // Simula PUT /api/comments/:id — actualiza comentario existente
+      setComments(comments.map((c) => (c.id === selected.id ? { ...selected, ...form } : c)))
+      showSuccess('Comentario actualizado exitosamente')
     }
+
+    setFormMode(null)
   }
 
-  const filteredComments = useMemo(() => {
-    const query = search.trim().toLowerCase()
+  // Confirma y ejecuta el DELETE del comentario seleccionado
+  const confirmDelete = () => {
+    setComments(comments.filter((c) => c.id !== deleteTarget.id))
+    setDeleteTarget(null)
+    showSuccess('Comentario eliminado')
+  }
 
-    return comments.filter((comment) => {
-      const author = getUserName(usersById.get(comment.userId)).toLowerCase()
-      const context = getLessonContext(comment, lessonsById, modulesById)
-      const isReply = Boolean(comment.parentId)
-      const matchesScope =
-        scopeFilter === 'all' ||
-        (scopeFilter === 'questions' && !isReply) ||
-        (scopeFilter === 'replies' && isReply)
-      const matchesSearch =
-        !query ||
-        author.includes(query) ||
-        comment.content.toLowerCase().includes(query) ||
-        context.title.toLowerCase().includes(query) ||
-        context.subtitle.toLowerCase().includes(query)
-
-      return matchesScope && matchesSearch
-    })
-  }, [comments, lessonsById, modulesById, scopeFilter, search, usersById])
-
-  const stats = useMemo(() => {
-    const replies = comments.filter((comment) => comment.parentId).length
-    const topLiked = comments.reduce((max, comment) => Math.max(max, Number(comment.likes ?? 0)), 0)
-    return { replies, topLiked }
-  }, [comments])
-
-  const formCopy = {
-    create: {
-      eyebrow: 'Comentario de usuario',
-      title: 'Crear comentario',
-      description: 'El usuario publica una duda o aporte en una lección. Después podrá editarlo o eliminarlo.',
-      actorLabel: 'Usuario',
-      actorPlaceholder: 'Selecciona usuario',
-      contentLabel: 'Comentario',
-      contentPlaceholder: 'Escribe la duda, aporte o reflexión del usuario.',
-      submitLabel: 'Publicar comentario',
-      submitIcon: 'send',
-    },
-    edit: {
-      eyebrow: 'Editar comentario',
-      title: 'Actualizar comentario del usuario',
-      description: 'Solo se actualiza el contenido del comentario seleccionado. El autor y la lección se conservan.',
-      actorLabel: 'Usuario',
-      actorPlaceholder: 'Selecciona usuario',
-      contentLabel: 'Comentario actualizado',
-      contentPlaceholder: 'Ajusta el contenido del comentario.',
-      submitLabel: 'Guardar cambios',
-      submitIcon: 'save',
-    },
-    mediate: {
-      eyebrow: 'Respuesta de mediación',
-      title: 'Responder sin alterar el comentario',
-      description: 'La intervención se guarda como un comentario nuevo del administrador. El comentario original permanece intacto.',
-      actorLabel: 'Mediador',
-      actorPlaceholder: 'Selecciona admin',
-      contentLabel: 'Mensaje del mediador',
-      contentPlaceholder: 'Aporta contexto, orienta la conversación o pide mantener el respeto.',
-      submitLabel: 'Publicar intervención',
-      submitIcon: 'record_voice_over',
-    },
-  }[formMode]
+  // Verifica si un comentario es respuesta a otro
+  const isReply = (comment) => comment.parentId && comment.parentId !== '-'
 
   return (
-    <main className="page comments-moderation-page">
-      <section className="page-header">
-        <span className="eyebrow">Comunidad del curso</span>
-        <h1>Comentarios</h1>
-        <p>Los usuarios gestionan sus comentarios; el admin acompaña la conversación como mediador sin alterar mensajes ajenos.</p>
-      </section>
+    <main className="page">
 
-      {error ? <div className="data-notice">{error}</div> : null}
-
-      <section className="comment-summary-grid">
-        <article className="comment-summary-card">
-          <Icon name="forum" />
-          <div>
-            <strong>{comments.length}</strong>
-            <span>Comentarios</span>
-          </div>
-        </article>
-        <article className="comment-summary-card">
-          <Icon name="record_voice_over" />
-          <div>
-            <strong>{stats.replies}</strong>
-            <span>Respuestas</span>
-          </div>
-        </article>
-        <article className="comment-summary-card">
-          <Icon name="thumb_up" />
-          <div>
-            <strong>{stats.topLiked}</strong>
-            <span>Máximo likes</span>
-          </div>
-        </article>
-        <article className="comment-summary-card">
-          <Icon name="admin_panel_settings" />
-          <div>
-            <strong>{adminUsers.length}</strong>
-            <span>Mediadores</span>
-          </div>
-        </article>
-      </section>
-
-      {formMode ? (
-        <section className="admin-panel comment-mediation-panel">
-          <div className="admin-panel-header">
-          <div>
-            <span className="eyebrow">{formCopy.eyebrow}</span>
-            <h2>{formCopy.title}</h2>
-            <p>{formCopy.description}</p>
-          </div>
+      {/* Toast de éxito — aparece temporalmente tras cada operación */}
+      {successMsg ? (
+        <div style={{
+          position: 'fixed',
+          top: '1rem',
+          right: '1rem',
+          background: '#2d6a4f',
+          color: 'white',
+          padding: '0.75rem 1.25rem',
+          borderRadius: '8px',
+          zIndex: 200,
+          fontWeight: '600'
+        }}>
+          {successMsg}
         </div>
+      ) : null}
 
-          <form className="comment-mediation-form" onSubmit={submit}>
-            <label className="form-label">
-              {formCopy.actorLabel}
-              <select className="form-input" value={form.userId} onChange={field('userId')} required disabled={isEditMode}>
-                <option value="">{formCopy.actorPlaceholder}</option>
-                {(isMediationMode ? adminUsers : regularUsers).map((user) => (
-                  <option value={user.id} key={user.id}>
-                    {getUserName(user)} · {user.email}
-                  </option>
-                ))}
-              </select>
+      {/* Encabezado de la página */}
+      <section className="page-header">
+        <span className="eyebrow">/api/comments</span>
+        <h1>Comentarios</h1>
+        <p>
+          Discusión por lección con respuestas anidadas y likes.
+          Total: {comments.length} comentarios —{' '}
+          {comments.filter((c) => isReply(c)).length} respuestas
+        </p>
+      </section>
+
+      {/* Formulario — se muestra al crear (POST) o editar (PUT) */}
+      {formMode ? (
+        <section className="admin-panel" style={{ marginBottom: '2rem' }}>
+          <div className="admin-panel-header">
+            <div>
+              <span className="eyebrow">{formMode === 'create' ? 'POST /api/comments' : 'PUT /api/comments/:id'}</span>
+              <h2>{formMode === 'create' ? 'Nuevo comentario' : 'Editar comentario'}</h2>
+            </div>
+          </div>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '480px' }}>
+            <label>
+              Usuario ID
+              <input
+                value={form.userId}
+                onChange={(e) => setForm({ ...form, userId: e.target.value })}
+                placeholder="USR-001"
+              />
+              {errors.userId ? <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.userId}</span> : null}
             </label>
-
-            <label className="form-label">
-              Lección
-              <select className="form-input" value={form.lessonId} onChange={field('lessonId')} required disabled={isEditMode || isMediationMode}>
-                <option value="">Selecciona una lección</option>
-                {lessons.map((lesson) => {
-                  const context = getLessonContext({ lessonId: lesson.id }, lessonsById, modulesById)
-                  return (
-                    <option value={lesson.id} key={lesson.id}>
-                      {context.subtitle} · {lesson.title}
-                    </option>
-                  )
-                })}
-              </select>
+            <label>
+              Lección ID
+              <input
+                value={form.lessonId}
+                onChange={(e) => setForm({ ...form, lessonId: e.target.value })}
+                placeholder="LES-001"
+              />
+              {errors.lessonId ? <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.lessonId}</span> : null}
             </label>
-
-            {selectedParent ? (
-              <div className="comment-original-box">
-                <span>Comentario original</span>
-                <p>{selectedParent.content}</p>
-              </div>
-            ) : null}
-
-            <label className="form-label comment-field-wide">
-              {formCopy.contentLabel}
-              <textarea
-                className="form-input comment-textarea"
-                value={form.content}
-                onChange={field('content')}
-                placeholder={formCopy.contentPlaceholder}
-                required
+            <label>
+              Responde a (Parent ID)
+              <input
+                value={form.parentId}
+                onChange={(e) => setForm({ ...form, parentId: e.target.value })}
+                placeholder="- (comentario raíz)"
               />
             </label>
-
-            <div className="comment-context-card">
-              <Icon name="school" />
-              <div>
-                <strong>{selectedLessonContext?.title ?? 'Lección pendiente'}</strong>
-                <span>{selectedLessonContext?.subtitle ?? 'Selecciona la lección donde aparecerá la intervención'}</span>
-              </div>
-            </div>
-
-            <div className="enrollment-form-actions">
+            <label>
+              Contenido
+              <textarea
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                placeholder="Escribe tu comentario..."
+                rows={3}
+              />
+              {errors.content ? <span style={{ color: 'red', fontSize: '0.8rem' }}>{errors.content}</span> : null}
+            </label>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
               <Button type="submit">
-                <Icon name={formCopy.submitIcon} />
-                {formCopy.submitLabel}
+                <Icon name={formMode === 'create' ? 'add' : 'save'} />
+                {formMode === 'create' ? 'Publicar' : 'Guardar'}
               </Button>
-              <Button variant="secondary" type="button" onClick={closeForm}>
+              <Button variant="secondary" onClick={() => setFormMode(null)}>
                 Cancelar
               </Button>
             </div>
@@ -348,134 +192,88 @@ export function CommentsPage() {
         </section>
       ) : null}
 
+      {/* Tabla principal — equivalente a GET /api/comments */}
       <section className="admin-panel">
-        <div className="admin-panel-header comment-list-header">
+        <div className="admin-panel-header">
           <div>
-            <span className="eyebrow">Conversación del curso</span>
-            <h2>Conversación por lección</h2>
-            <p>El usuario normal crea, edita y elimina sus comentarios. El admin solo agrega respuestas de mediación.</p>
+            <span className="eyebrow">GET /api/comments</span>
+            <h2>Listado de comentarios</h2>
           </div>
-          <div className="comment-header-actions">
-            <Button variant="secondary" onClick={() => openMediation()}>
-              <Icon name="record_voice_over" />
-              Mediar
-            </Button>
-            <Button onClick={openUserComment}>
-              <Icon name="add_comment" />
-              Nuevo comentario
-            </Button>
-          </div>
+          <Button onClick={openCreate}>
+            <Icon name="add" />
+            Nuevo comentario
+          </Button>
         </div>
 
-        <div className="comment-toolbar">
-          <label className="search admin-search">
-            <Icon name="search" />
-            <input
-              placeholder="Buscar autor, lección o contenido"
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </label>
-
-          <div className="enrollment-filter-group" aria-label="Filtrar comentarios">
-            {[
-              ['all', 'Todos'],
-              ['questions', 'Principales'],
-              ['replies', 'Respuestas'],
-            ].map(([value, label]) => (
-              <button className={scopeFilter === value ? 'active' : ''} type="button" key={value} onClick={() => setScopeFilter(value)}>
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="comment-list">
-          {loading ? (
-            <div className="comment-empty-state">Cargando comentarios...</div>
-          ) : filteredComments.length === 0 ? (
-            <div className="comment-empty-state">No hay comentarios con esos filtros.</div>
-          ) : (
-            filteredComments.map((comment) => {
-              const author = usersById.get(comment.userId)
-              const parent = comment.parentId ? commentsById.get(comment.parentId) : null
-              const context = getLessonContext(comment, lessonsById, modulesById)
-              const isAdmin = author?.role === 'admin' || author?.role === 'ADMIN'
-              const canUserManage = !isAdmin
-
-              return (
-                <article className={comment.parentId ? 'comment-card is-reply' : 'comment-card'} key={comment.id}>
-                  <div className="comment-card-header">
-                    <div className="avatar comment-avatar">{getUserName(author).slice(0, 2).toUpperCase()}</div>
-                    <div>
-                      <strong>{getUserName(author)}</strong>
-                      <span>{isAdmin ? 'Mediador' : 'Participante'} · {formatDate(comment.createdAt)}</span>
-                    </div>
-                    <span className={isAdmin ? 'comment-role-badge admin' : 'comment-role-badge'}>{isAdmin ? 'Admin' : 'Usuario'}</span>
-                  </div>
-
-                  <div className="comment-context">
-                    <Icon name="play_lesson" />
-                    <span>{context.subtitle} · {context.title}</span>
-                  </div>
-
-                  {parent ? (
-                    <blockquote className="comment-parent">
-                      En respuesta a: {parent.content}
-                    </blockquote>
-                  ) : null}
-
-                  <p className="comment-body">{comment.content}</p>
-
-                  <div className="comment-card-footer">
-                    <span>
-                      <Icon name="thumb_up" />
-                      {comment.likes ?? 0} likes
-                    </span>
-                    <div className="comment-actions">
-                      <button type="button" onClick={() => openMediation(comment)}>
-                        <Icon name="record_voice_over" />
-                        Mediar
-                      </button>
-                      {canUserManage ? (
-                        <>
-                          <button type="button" onClick={() => openEditComment(comment)}>
-                            <Icon name="edit" />
-                            Editar
-                          </button>
-                          <button className="danger" type="button" onClick={() => setDeleteTarget(comment)}>
-                            <Icon name="delete" />
-                            Eliminar
-                          </button>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                </article>
-              )
-            })
-          )}
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Lección</th>
+                <th>Tipo</th>
+                <th>Contenido</th>
+                <th>Likes</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Si no hay comentarios, muestra mensaje vacío */}
+              {comments.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
+                    No hay comentarios registrados.
+                  </td>
+                </tr>
+              ) : (
+                comments.map((comment) => (
+                  <tr key={comment.id}>
+                    <td>{comment.id}</td>
+                    <td>{comment.userId}</td>
+                    <td>{comment.lessonId}</td>
+                    {/* Muestra visualmente si es respuesta o comentario raíz */}
+                    <td>
+                      {isReply(comment) ? (
+                        <span style={{ color: 'var(--color-primary, #8b0000)', fontSize: '0.8rem' }}>
+                          ↳ Respuesta
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.8rem' }}>Comentario</span>
+                      )}
+                    </td>
+                    <td>{comment.content}</td>
+                    <td>❤️ {comment.likes}</td>
+                    <td>
+                      <div className="row-actions">
+                        {/* Botón editar — abre formulario en modo PUT */}
+                        <button type="button" aria-label="Editar" onClick={() => openEdit(comment)}>
+                          <Icon name="edit" />
+                        </button>
+                        {/* Botón eliminar — abre modal de confirmación DELETE */}
+                        <button type="button" aria-label="Eliminar" onClick={() => setDeleteTarget(comment)}>
+                          <Icon name="delete" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
+      {/* Modal de confirmación — equivalente a DELETE /api/comments/:id */}
       {deleteTarget ? (
-        <div className="modal-overlay">
-          <div className="auth-card comment-delete-card">
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="auth-card" style={{ maxWidth: '360px', width: '100%' }}>
             <div className="auth-card-header">
-              <span className="eyebrow">Eliminar comentario</span>
-              <h2>Acción de usuario</h2>
-              <p>
-                Se eliminará el comentario de <strong>{getUserName(usersById.get(deleteTarget.userId))}</strong>. Esta acción corresponde
-                al CRUD del usuario normal, no a la mediación del admin.
-              </p>
+              <h2>Eliminar comentario</h2>
+              <p>¿Estás seguro que deseas eliminar este comentario? Esta acción no se puede deshacer.</p>
             </div>
-            <div className="comment-original-box">
-              <span>Contenido</span>
-              <p>{deleteTarget.content}</p>
-            </div>
-            <div className="enrollment-form-actions">
-              <Button onClick={remove}>
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+              <Button onClick={confirmDelete}>
                 <Icon name="delete" />
                 Eliminar
               </Button>
@@ -486,7 +284,6 @@ export function CommentsPage() {
           </div>
         </div>
       ) : null}
-
     </main>
   )
 }

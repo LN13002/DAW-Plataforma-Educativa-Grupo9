@@ -394,10 +394,44 @@ Este comando construye la imagen de la aplicación, empaqueta el frontend dentro
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - PostgreSQL host: `localhost:5433`
 
+También puedes ejecutar el stack directamente con Docker Compose:
+
+```bash
+# Compilar la imagen
+docker compose build
+
+# Iniciar la app y la base de datos
+docker compose up
+```
+
+Para compilar e iniciar en un solo paso:
+
+```bash
+docker compose up --build
+```
+
+Si prefieres dejarlo corriendo en segundo plano:
+
+```bash
+docker compose up -d
+```
+
+Para ver los logs del stack:
+
+```bash
+docker compose logs -f
+```
+
 Para detener el stack:
 
 ```bash
 mise run app:down
+```
+
+O directamente con Docker Compose:
+
+```bash
+docker compose down
 ```
 
 ---

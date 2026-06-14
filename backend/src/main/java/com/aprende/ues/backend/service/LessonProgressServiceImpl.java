@@ -52,8 +52,12 @@ public class LessonProgressServiceImpl implements LessonProgressService {
 
         progress.setEnrollment(enrollment);
         progress.setLesson(lesson);
-        progress.setSecondsWatched(request.secondsWatched() != null ? request.secondsWatched() : 0);
-        progress.setCompleted(Boolean.TRUE.equals(request.completed()));
+        int watched = request.secondsWatched() != null ? request.secondsWatched() : 0;
+        int duration = lesson.getDurationSeconds() != null ? lesson.getDurationSeconds() : 0;
+
+        boolean autoCompleted = duration > 0 && watched >= duration;
+        progress.setSecondsWatched(watched);
+        progress.setCompleted(Boolean.TRUE.equals(request.completed()) || autoCompleted);
         progress.setLastWatchedAt(OffsetDateTime.now());
 
         return toResponse(lessonProgressRepository.save(progress));

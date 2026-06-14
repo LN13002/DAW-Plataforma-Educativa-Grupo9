@@ -275,6 +275,7 @@ function App() {
   }
 
   const markCompleted = async () => {
+
     if (selectedCourse?.enrollmentId && activeLesson?.id) {
       try {
         await api.upsertLessonProgress({
@@ -283,6 +284,13 @@ function App() {
           secondsWatched: activeLesson.durationSeconds ?? 0,
           completed: true,
         })
+        
+        setAppLessons((prev) =>
+          prev.map((l) =>
+            l.id === activeLesson.id ? { ...l, status: 'completed' } : l
+          )
+        )
+
         setCompletedMessage('Leccion marcada como completada en el backend.')
       } catch {
         setCompletedMessage('No se pudo actualizar el progreso en la API.')

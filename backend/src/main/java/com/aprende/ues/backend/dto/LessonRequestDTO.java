@@ -19,6 +19,7 @@ public record LessonRequestDTO(
     String description,
     String videoUrl,
 
+    @Min(value = 0, message = "Duration must be 0 or greater")
     Integer durationSeconds,
 
     @NotNull(message = "Position is required")

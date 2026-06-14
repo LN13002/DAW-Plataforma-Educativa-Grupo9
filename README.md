@@ -1,4 +1,21 @@
-# AprendeUES
+<p align="center">
+  <img src="./docs/ues.jpg" alt="Logo UES" width="130">
+</p>
+
+
+
+<p align="center">
+  <b>Plataforma Educativa | Universidad de El Salvador</b>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
+  <img src="https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
+  <img src="https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+</p>
+<h1 align="center" style="color: #f4e9e9; border-bottom: none;">AprendeUES</h1>
 
 Plataforma educativa para gestionar cursos, módulos, lecciones, progreso académico, comentarios, reseñas y certificados de finalización. El proyecto combina una experiencia web en React con una API REST en Spring Boot, persistencia en PostgreSQL y un flujo de desarrollo reproducible con mise y Docker.
 
@@ -502,3 +519,7 @@ fix: corrige cálculo de progreso por inscripción
 docs: actualiza README con arquitectura
 chore: actualiza configuración de Docker
 ```
+---
+<div align="center">
+    <kbd>© 2026 - Grupo 9 | Desarrollo de Aplicaciones Web</kbd>
+</div>

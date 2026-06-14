@@ -1,8 +1,8 @@
 import { Icon } from './Icon'
 
-export function StatCard({ icon, value, label }) {
+export function StatCard({ icon, value, label, onClick }) {
   return (
-    <article className="stat-card">
+    <article className="stat-card" onClick={onClick} style={onClick ? { cursor: 'pointer' } : {}}>
       <Icon name={icon} />
       <div>
         <strong>{value}</strong>

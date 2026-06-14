@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '../../components/Button'
 import { Icon } from '../../components/Icon'
-import { api } from '../../services/api' // Importamos tu puente real
+import { api } from '../../services/api'
 
 export function UsersPage() {
   const [users, setUsers] = useState([])
@@ -9,8 +9,8 @@ export function UsersPage() {
   const [selected, setSelected] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  // Campos exactos de tu UserRequestDTO
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -20,7 +20,6 @@ export function UsersPage() {
     avatarUrl: ''
   })
 
-  // 1. CARGAR DATOS REALES AL INICIAR
   useEffect(() => {
     loadUsers()
   }, [])
@@ -30,14 +29,14 @@ export function UsersPage() {
     try {
       const data = await api.getUsers()
       setUsers(data)
+      setError('')
     } catch (err) {
-      console.error("Error al cargar usuarios:", err)
+      setError('No se pudieron cargar los usuarios.')
     } finally {
       setLoading(false)
     }
   }
 
-  // 2. LÓGICA DE FORMULARIO
   const openCreate = () => {
     setForm({ firstName: '', lastName: '', email: '', password: '', role: 'student', avatarUrl: '' })
     setSelected(null)
@@ -45,12 +44,13 @@ export function UsersPage() {
   }
 
   const openEdit = (user) => {
+    const role = String(user.role ?? 'student').toLowerCase()
     setForm({ 
       firstName: user.firstName, 
       lastName: user.lastName, 
       email: user.email, 
-      password: '', // Password vacía por seguridad en edición
-      role: user.role.toLowerCase(),
+      password: '',
+      role: role === 'teacher' ? 'instructor' : role,
       avatarUrl: user.avatarUrl || ''
     })
     setSelected(user)
@@ -66,9 +66,10 @@ export function UsersPage() {
         await api.updateUser(selected.id, form)
       }
       setFormMode(null)
-      loadUsers() // Recargar de la base de datos
+      setError('')
+      loadUsers()
     } catch (err) {
-      alert("Error al guardar: Verifica que el email sea único y la contraseña tenga 8 caracteres.")
+      setError('No se pudo guardar el usuario. Verifica que el correo sea único y que la contraseña tenga al menos 8 caracteres.')
     }
   }
 
@@ -76,26 +77,30 @@ export function UsersPage() {
     try {
       await api.deleteUser(deleteTarget.id)
       setDeleteTarget(null)
+      setError('')
       loadUsers()
     } catch (err) {
-      alert("No se pudo eliminar el usuario.")
+      setError('No se pudo eliminar el usuario. Revisa si tiene cursos o registros asociados.')
     }
   }
 
   return (
     <main className="page">
       <section className="page-header">
-        <span className="eyebrow">/api/users</span>
-        <h1>Gestión de Usuarios</h1>
+        <span className="eyebrow">Personas y roles</span>
+        <h1>Gestión de usuarios</h1>
         <p>Administra los estudiantes, docentes y administradores de la plataforma.</p>
       </section>
+
+      {error ? <div className="data-notice">{error}</div> : null}
 
       {formMode ? (
         <section className="admin-panel" style={{ marginBottom: '2rem' }}>
           <div className="admin-panel-header">
             <div>
-              <span className="eyebrow">{formMode === 'create' ? 'POST' : 'PUT'}</span>
-              <h2>{formMode === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'}</h2>
+              <span className="eyebrow">{formMode === 'create' ? 'Nueva persona' : 'Actualizar persona'}</span>
+              <h2>{formMode === 'create' ? 'Crear usuario' : 'Editar usuario'}</h2>
+              <p>Define los datos de acceso y el rol con el que esta persona navegará la plataforma.</p>
             </div>
           </div>
 
@@ -112,7 +117,7 @@ export function UsersPage() {
             </div>
 
             <label className="form-label">
-              Correo Institucional
+              Correo institucional
               <input className="form-input" type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required />
             </label>
 
@@ -125,7 +130,7 @@ export function UsersPage() {
               Rol
               <select className="form-input" value={form.role} onChange={(e) => setForm({...form, role: e.target.value})}>
                 <option value="student">Estudiante</option>
-                <option value="teacher">Docente</option>
+                <option value="instructor">Instructor</option>
                 <option value="admin">Administrador</option>
               </select>
             </label>
@@ -142,16 +147,22 @@ export function UsersPage() {
 
       <section className="admin-panel">
         <div className="admin-panel-header">
-          <h2>Lista de Usuarios Real</h2>
-          <Button onClick={openCreate}><Icon name="add" /> Crear Usuario</Button>
+          <div>
+            <span className="eyebrow">Directorio</span>
+            <h2>Usuarios registrados</h2>
+            <p>Revisa quién puede ingresar y qué vista verá al cambiar de persona.</p>
+          </div>
+          <Button onClick={openCreate}><Icon name="add" /> Crear usuario</Button>
         </div>
 
         <div className="admin-table-wrap">
-          {loading ? <p style={{padding: '20px'}}>Conectando con el backend...</p> : (
+          {loading ? <p style={{padding: '20px'}}>Cargando usuarios...</p> : users.length === 0 ? (
+            <div className="comment-empty-state">Aún no hay usuarios registrados.</div>
+          ) : (
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Nombre Completo</th>
+                  <th>Nombre completo</th>
                   <th>Email</th>
                   <th>Rol</th>
                   <th>Acciones</th>
@@ -177,14 +188,13 @@ export function UsersPage() {
         </div>
       </section>
 
-      {/* MODAL DE ELIMINACIÓN */}
       {deleteTarget && (
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div className="auth-card" style={{ maxWidth: '400px', width: '100%' }}>
-            <h2>Confirmar eliminación</h2>
-            <p>¿Estás seguro de eliminar a <strong>{deleteTarget.firstName} {deleteTarget.lastName}</strong>?</p>
+            <h2>Eliminar usuario</h2>
+            <p>Se eliminará a <strong>{deleteTarget.firstName} {deleteTarget.lastName}</strong>. Revisa antes si tiene inscripciones, cursos o actividad asociada.</p>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-              <Button onClick={confirmDelete}><Icon name="delete" /> Si, eliminar</Button>
+              <Button onClick={confirmDelete}><Icon name="delete" /> Sí, eliminar</Button>
               <Button variant="secondary" onClick={() => setDeleteTarget(null)}>Cancelar</Button>
             </div>
           </div>

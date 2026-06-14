@@ -1,10 +1,9 @@
 const learnerNavItems = [
   ['home', 'Inicio', 'home'],
   ['explore', 'Explorar', 'explore'],
-  ['account_tree', 'Mi Ruta', 'player'],
-  ['local_library', 'Biblioteca', 'library'],
+  ['local_library', 'Mis cursos', 'library'],
+  ['track_changes', 'Mi progreso', 'progress'],
   ['workspace_premium', 'Diplomas', 'certificates'],
-  ['track_changes', 'Progreso', 'progress'],
   ['settings', 'Ajustes', 'profile'],
 ]
 
@@ -18,10 +17,12 @@ const instructorNavItems = [
 
 const adminNavItems = [
   ['home', 'Inicio', 'home'],
+  ['group', 'Usuarios', 'users'],
+  ['category', 'Categorías', 'categories'],
   ['view_module', 'Módulos', 'modules'],
-  ['forum', 'Comentarios', 'comments'],
-  ['how_to_reg', 'Inscripciones', 'enrollments'],
   ['play_lesson', 'Lecciones', 'lessons'],
+  ['how_to_reg', 'Inscripciones', 'enrollments'],
+  ['forum', 'Comentarios', 'comments'],
   ['workspace_premium', 'Certificados', 'certificates'],
   ['settings', 'Ajustes', 'profile'],
 ]
@@ -35,10 +36,10 @@ export function AppShell({ user, personas = [], activeView, onNavigate, onLogout
   const isInstructor = user.plan === 'instructor'
   const navItems = isAdmin ? adminNavItems : isInstructor ? instructorNavItems : learnerNavItems
   const topbarItems = isAdmin
-    ? [['Panel', 'modules'], ['Inscripciones', 'enrollments'], ['Lecciones', 'lessons']]
+    ? [['Usuarios', 'users'], ['Categorías', 'categories'], ['Certificados', 'certificates']]
     : isInstructor
     ? [['Mis Módulos', 'modules'], ['Mis Lecciones', 'lessons'], ['Mis cursos', 'explore']]
-    : [['Mis Cursos', 'library'], ['Explorar', 'explore'], ['Comunidad', 'profile']]
+    : [['Mis cursos', 'library'], ['Explorar', 'explore'], ['Diplomas', 'certificates']]
 
   const handleNavigate = (view) => {
     setAccountOpen(false)
@@ -85,7 +86,7 @@ export function AppShell({ user, personas = [], activeView, onNavigate, onLogout
 
           <label className="search">
             <Icon name="search" />
-            <input placeholder="Que quieres aprender hoy?" type="search" />
+            <input placeholder="¿Qué quieres aprender hoy?" type="search" />
           </label>
 
           <nav className="topbar-nav" aria-label="Secciones">
@@ -97,17 +98,11 @@ export function AppShell({ user, personas = [], activeView, onNavigate, onLogout
           </nav>
 
           <div className="topbar-actions">
-            <button className="icon-button" type="button" aria-label="Notificaciones">
-              <Icon name="notifications" />
-            </button>
-            <button className="icon-button" type="button" aria-label="Carrito">
-              <Icon name="shopping_cart" />
-            </button>
             <div className="account-menu">
               <button
                 className="avatar avatar-button"
                 type="button"
-                aria-label="Abrir menu de cuenta"
+                aria-label="Abrir menú de cuenta"
                 aria-expanded={accountOpen}
                 onClick={() => setAccountOpen((open) => !open)}
               >
@@ -121,7 +116,7 @@ export function AppShell({ user, personas = [], activeView, onNavigate, onLogout
                     <div>
                       <strong>{user.name}</strong>
                       <span>{user.email}</span>
-                      <small>Vista actual: {user.plan === 'admin' ? 'Admin' : user.plan === 'instructor' ? 'Instructor' : 'User'}</small>
+                      <small>Vista actual: {user.plan === 'admin' ? 'Administrador' : user.plan === 'instructor' ? 'Instructor' : 'Estudiante'}</small>
                     </div>
                   </div>
                   {personas.length > 0 ? (
@@ -148,13 +143,25 @@ export function AppShell({ user, personas = [], activeView, onNavigate, onLogout
                     <Icon name="person" />
                     Ver perfil
                   </button>
-                  <button type="button" onClick={() => handleNavigate('library')}>
-                    <Icon name="local_library" />
-                    Mi aprendizaje
-                  </button>
+                  {isAdmin ? (
+                    <button type="button" onClick={() => handleNavigate('enrollments')}>
+                      <Icon name="how_to_reg" />
+                      Inscripciones
+                    </button>
+                  ) : isInstructor ? (
+                    <button type="button" onClick={() => handleNavigate('modules')}>
+                      <Icon name="view_module" />
+                      Mis módulos
+                    </button>
+                  ) : (
+                    <button type="button" onClick={() => handleNavigate('library')}>
+                      <Icon name="local_library" />
+                      Mi aprendizaje
+                    </button>
+                  )}
                   <button className="danger" type="button" onClick={onLogout}>
                     <Icon name="logout" />
-                    Cerrar sesion
+                    Cerrar sesión
                   </button>
                 </div>
               ) : null}
@@ -162,7 +169,7 @@ export function AppShell({ user, personas = [], activeView, onNavigate, onLogout
           </div>
         </header>
 
-        <nav className="mobile-nav" aria-label="Navegacion movil">
+        <nav className="mobile-nav" aria-label="Navegación móvil">
           {navItems.map(([icon, label, view]) => (
             <button
               className={activeView === view ? 'active' : ''}

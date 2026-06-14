@@ -24,7 +24,7 @@ function getYouTubeEmbedUrl(videoUrl) {
   return ''
 }
 
-export function VideoPlayerCard({ title = 'Implementacion de API Gateway con NestJS', courseTitle, videoUrl, onComplete }) {
+export function VideoPlayerCard({ title = 'Lección del curso', courseTitle, videoUrl, onComplete }) {
   const embedUrl = getYouTubeEmbedUrl(videoUrl)
 
   return (
@@ -40,19 +40,19 @@ export function VideoPlayerCard({ title = 'Implementacion de API Gateway con Nes
         ) : (
           <div className="video-placeholder">
             <Icon name="play_lesson" />
-            <strong>Contenido de la leccion</strong>
-            <span>Esta leccion aun no tiene un video enlazado.</span>
+            <strong>Contenido de la lección</strong>
+            <span>Esta lección aún no tiene un video enlazado.</span>
           </div>
         )}
       </div>
 
       <div className="player-info">
         <div>
-          <span className="eyebrow">{courseTitle || 'Leccion del curso'}</span>
+          <span className="eyebrow">{courseTitle || 'Lección del curso'}</span>
           <h2>{title}</h2>
           <p>
             {courseTitle ? `${courseTitle}. ` : ''}
-            Video y avance de la leccion en una sola vista.
+            Video y avance de la lección en una sola vista.
           </p>
         </div>
         <Button onClick={onComplete}>

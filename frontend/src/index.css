@@ -1378,15 +1378,24 @@ h3,
   margin-top: 18px;
 }
 
-.resource-grid a {
+.resource-grid a,
+.resource-grid button,
+.resource-grid .resource-item {
   display: flex;
   align-items: center;
   gap: 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  background: white;
   color: var(--color-primary);
   font-weight: 800;
   padding: 14px;
+  text-align: left;
+}
+
+.resource-grid a,
+.resource-grid button {
+  cursor: pointer;
 }
 
 .toast {
@@ -3133,6 +3142,12 @@ h3,
   letter-spacing: 0.08em;
   padding: 12px 18px;
   text-transform: uppercase;
+}
+
+.lesson-empty-state {
+  color: var(--color-muted);
+  font-weight: 800;
+  padding: 18px;
 }
 
 .lesson-list {

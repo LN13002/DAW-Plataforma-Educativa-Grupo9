@@ -15,7 +15,7 @@ WORKDIR /workspace/backend
 
 COPY backend/.mvn ./.mvn
 COPY backend/mvnw backend/pom.xml ./
-RUN chmod +x ./mvnw
+RUN sed -i 's/\r$//' ./mvnw && chmod +x ./mvnw
 RUN ./mvnw -B dependency:go-offline
 
 COPY backend/src ./src

@@ -13,7 +13,7 @@ services:
       DB_PASSWORD: aprende_ues
       SPRING_JPA_SHOW_SQL: "false"
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8082}:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -27,7 +27,7 @@ services:
       POSTGRES_USER: aprende_ues
       POSTGRES_PASSWORD: aprende_ues
     ports:
-      - "5433:5432"
+      - "${DB_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

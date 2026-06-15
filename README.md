@@ -362,7 +362,7 @@ flowchart TB
   BackBuild --> Jar["Spring Boot jar"]
 
   Jar --> Runtime["Stage 3: eclipse-temurin:21-jre-alpine"]
-  Runtime --> Container["aprende_ues_app:8080"]
+  Runtime --> Container["aprende_ues_app:8080 interno / 8082 host"]
   Compose["docker-compose.yml"] --> Container
   Compose --> DB["aprende_ues_db:5432 interno / 5433 host"]
 ```
@@ -441,13 +441,13 @@ docker compose up
 6. Abrir la aplicación en el navegador:
 
 ```text
-http://localhost:8080
+http://localhost:8082
 ```
 
 7. Abrir Swagger UI para verificar la API:
 
 ```text
-http://localhost:8080/swagger-ui.html
+http://localhost:8082/swagger-ui.html
 ```
 
 8. Para detener el stack:
@@ -462,7 +462,19 @@ Comando alternativo para compilar e iniciar en un solo paso:
 docker compose up --build
 ```
 
-Si el puerto `8080` está ocupado, detén el proceso local que lo utiliza o cambia el mapeo de puertos en `docker-compose.yml`, por ejemplo `8082:8080`.
+Por defecto Docker Compose publica la app en `8082` para evitar conflictos con backends locales en `8080`. Si necesitas otro puerto, puedes usar:
+
+```bash
+APP_PORT=8090 docker compose up --build
+```
+
+Si PostgreSQL local ya usa `5433`, también puedes cambiar el puerto expuesto de la base:
+
+```bash
+DB_PORT=5435 docker compose up --build
+```
+
+En Windows, si Docker muestra un error como `./mvnw: not found` o `exit code: 127`, normalmente se debe a saltos de línea CRLF en el wrapper de Maven. El Dockerfile normaliza `backend/mvnw` automáticamente y `.gitattributes` fuerza ese archivo a usar LF para evitar ese problema.
 
 ### Stack completo con Docker
 
@@ -472,9 +484,9 @@ mise run app:up
 
 Este comando construye la imagen de la aplicación, empaqueta el frontend dentro del backend y levanta:
 
-- App web: `http://localhost:8080`
-- API REST: `http://localhost:8080/api`
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- App web: `http://localhost:8082`
+- API REST: `http://localhost:8082/api`
+- Swagger UI: `http://localhost:8082/swagger-ui.html`
 - PostgreSQL host: `localhost:5433`
 
 También puedes ejecutar el stack directamente con Docker Compose:
@@ -540,11 +552,11 @@ docker compose down
 
 | Servicio | URL |
 |---|---|
-| App web contenerizada | `http://localhost:8080` |
+| App web contenerizada | `http://localhost:8082` |
 | Frontend local Vite | `http://localhost:5173` |
-| API base | `http://localhost:8080/api` |
-| Swagger UI | `http://localhost:8080/swagger-ui.html` |
-| Actuator health | `http://localhost:8080/actuator/health` |
+| API base contenedorizada | `http://localhost:8082/api` |
+| Swagger UI contenedorizado | `http://localhost:8082/swagger-ui.html` |
+| Actuator health contenedorizado | `http://localhost:8082/actuator/health` |
 
 ---
 
@@ -668,7 +680,7 @@ Flyway valida checksums y Spring Boot usa `spring.jpa.hibernate.ddl-auto=validat
 Swagger UI está disponible en:
 
 ```text
-http://localhost:8080/swagger-ui.html
+http://localhost:8082/swagger-ui.html
 ```
 
 ---

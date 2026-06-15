@@ -2,9 +2,12 @@
 
 Guardar en esta carpeta las capturas referenciadas desde el README principal:
 
-- `swagger-ui.png`
-- `swagger-certificates.png`
-- `swagger-lesson-progress.png`
+- `Swagger-1.png`
+- `Swagger-2.png`
+- `Swagger-3.png`
+- `Swagger-4.png`
+- `Swagger-5.png`
+- `Swagger-6.png`
 - `vista-estudiante-inicio.png`
 - `vista-explorar-cursos.png`
 - `vista-player-leccion.png`

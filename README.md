@@ -700,37 +700,6 @@ Las capturas deben colocarse en `docs/evidencias/` para que el README las muestr
 
 ![Swagger 6](docs/evidencias/Swagger-6.png)
 
-### Capturas de vistas principales
-
-| Vista | Ruta sugerida | Qué debe mostrar |
-|---|---|---|
-| Inicio estudiante | `docs/evidencias/vista-estudiante-inicio.png` | Dashboard del estudiante con cursos y progreso |
-| Explorar cursos | `docs/evidencias/vista-explorar-cursos.png` | Catálogo de cursos disponibles |
-| Reproductor de lecciones | `docs/evidencias/vista-player-leccion.png` | Lección, recursos y comentarios |
-| Diplomas del estudiante | `docs/evidencias/vista-diplomas-estudiante.png` | Certificados disponibles o estado vacío |
-| Panel administrador | `docs/evidencias/vista-admin-panel.png` | Accesos de gestión administrativa |
-| Gestión de módulos | `docs/evidencias/vista-admin-modulos.png` | CRUD de módulos conectado a la API |
-| Gestión de lecciones | `docs/evidencias/vista-admin-lecciones.png` | CRUD de lecciones conectado a la API |
-| Panel docente | `docs/evidencias/vista-docente-panel.png` | Cursos y contenido asignado al docente |
-
-![Inicio estudiante](docs/evidencias/vista-estudiante-inicio.png)
-
-![Explorar cursos](docs/evidencias/vista-explorar-cursos.png)
-
-![Reproductor de lecciones](docs/evidencias/vista-player-leccion.png)
-
-![Diplomas estudiante](docs/evidencias/vista-diplomas-estudiante.png)
-
-![Panel administrador](docs/evidencias/vista-admin-panel.png)
-
-![Gestión de módulos](docs/evidencias/vista-admin-modulos.png)
-
-![Gestión de lecciones](docs/evidencias/vista-admin-lecciones.png)
-
-![Panel docente](docs/evidencias/vista-docente-panel.png)
-
-> Nota: si las imágenes aún no existen, crear la carpeta `docs/evidencias/`, guardar las capturas con los nombres indicados y confirmar que Git las incluya en el repositorio.
-
 ---
 
 ## Convención de commits

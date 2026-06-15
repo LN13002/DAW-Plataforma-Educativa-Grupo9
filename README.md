@@ -714,6 +714,34 @@ Las capturas deben colocarse en `docs/evidencias/` para que el README las muestr
 
 ---
 
+### Capturas de las vistas.
+
+| Evidencia | Archivo | Descripción |
+|---|---|---|
+| Vista 1 | `docs/evidencias/vista1.png` | Home del perfil estudiante |
+| Vista 2 | `docs/evidencias/vista2.png` | Vista del listado de cursos ofertados |
+| Vista 3 | `docs/evidencias/vista3.png` | Vista de los cursos tomados por el estudiante |
+| Vista 4 | `docs/evidencias/vista4.png` | Vista del progreso del estudiante |
+| Vista 5 | `docs/evidencias/vista5.png` | Vista del panel de ajustes del estudiante |
+| Vista 6 | `docs/evidencias/vista6.png` | Home del perfil administrador |
+| Vista 7 | `docs/evidencias/vista7.png` | Home del perfil instructor |
+
+![Vista 1](docs/evidencias/vista1.png)
+
+![Vista 2](docs/evidencias/vista2.png)
+
+![Vista 3](docs/evidencias/vista3.png)
+
+![Vista 4](docs/evidencias/vista4.png)
+
+![Vista 5](docs/evidencias/vista5.png)
+
+![Vista 6](docs/evidencias/vista6.png)
+
+![Vista 7](docs/evidencias/vista7.png)
+
+---
+
 ## Convención de commits
 
 Este proyecto usa Conventional Commits:

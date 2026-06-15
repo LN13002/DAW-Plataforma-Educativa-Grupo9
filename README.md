@@ -21,6 +21,28 @@ Plataforma educativa para gestionar cursos, módulos, lecciones, progreso acadé
 
 ---
 
+## Descripción del proyecto
+
+AprendeUES resuelve la necesidad de centralizar la administración y seguimiento de cursos virtuales para estudiantes, docentes y administradores de la Universidad de El Salvador. La plataforma permite organizar contenido académico, registrar inscripciones, medir el avance de aprendizaje y emitir certificados de finalización cuando el estudiante completa un curso.
+
+### Problema que resuelve
+
+En una plataforma educativa, no basta con mostrar cursos: también se necesita controlar quién imparte cada curso, cómo se organiza el contenido, qué estudiantes están inscritos, qué lecciones han completado y qué certificados pueden emitirse con respaldo verificable. AprendeUES integra esas operaciones en un solo sistema con frontend web, API REST y base de datos relacional.
+
+### Funciones principales
+
+- Gestión de usuarios con roles de estudiante, docente/instructor y administrador.
+- Gestión de categorías, cursos, módulos y lecciones.
+- Inscripción de estudiantes a cursos.
+- Seguimiento del progreso por lección y por curso.
+- Comentarios y respuestas dentro de lecciones.
+- Reseñas de cursos.
+- Emisión y descarga de certificados PDF para cursos completados.
+- Documentación interactiva de la API mediante Swagger UI.
+- Despliegue reproducible con Docker Compose.
+
+---
+
 ## Integrantes
 
 | Nombre | Carnet |
@@ -105,7 +127,9 @@ La aplicación puede ejecutarse en modo desarrollo local o como stack completo c
 │       ├── App.jsx
 │       └── main.jsx
 ├── docs/
-│   └── mise.md
+│   ├── evidencias/                 # Capturas de Swagger y vistas
+│   ├── mise.md
+│   └── ues.jpg
 ├── Dockerfile                       # Build multi-stage frontend + backend
 ├── docker-compose.yml               # App + PostgreSQL
 ├── mise.toml                        # Herramientas y tareas DX
@@ -165,7 +189,7 @@ flowchart LR
 
 ---
 
-## Modelo de datos
+## Diagrama Entidad-Relación
 
 ```mermaid
 erDiagram
@@ -288,6 +312,8 @@ erDiagram
   COURSES ||--o{ REVIEWS : receives
 ```
 
+El diagrama anterior representa el diseño entidad-relación de la base de datos. Puede visualizarse directamente en GitHub por estar escrito en Mermaid; si se requiere como imagen, se puede exportar desde el visor Markdown o desde una herramienta compatible con Mermaid.
+
 ### Reglas importantes del schema
 
 - Un usuario puede tener rol `student`, `instructor` o `admin`.
@@ -380,6 +406,63 @@ mise run dev
 ```
 
 Este flujo levanta PostgreSQL con Docker, ejecuta backend y frontend en modo desarrollo y deja disponible Swagger UI para explorar la API.
+
+### Manual de despliegue con Docker Compose
+
+Sigue estos pasos para levantar el sistema completo desde cero usando Docker Compose:
+
+1. Ubicarse en la raíz del repositorio:
+
+```bash
+cd DAW-Plataforma-Educativa-Grupo9
+```
+
+2. Verificar que Docker esté disponible:
+
+```bash
+docker --version
+docker compose version
+```
+
+3. Compilar la imagen de la aplicación:
+
+```bash
+docker compose build
+```
+
+4. Levantar la aplicación y la base de datos:
+
+```bash
+docker compose up
+```
+
+5. Esperar a que PostgreSQL aparezca como `Healthy` y Spring Boot termine de iniciar.
+
+6. Abrir la aplicación en el navegador:
+
+```text
+http://localhost:8080
+```
+
+7. Abrir Swagger UI para verificar la API:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+8. Para detener el stack:
+
+```bash
+docker compose down
+```
+
+Comando alternativo para compilar e iniciar en un solo paso:
+
+```bash
+docker compose up --build
+```
+
+Si el puerto `8080` está ocupado, detén el proceso local que lo utiliza o cambia el mapeo de puertos en `docker-compose.yml`, por ejemplo `8082:8080`.
 
 ### Stack completo con Docker
 
@@ -506,7 +589,8 @@ backend/src/main/resources/db/migration/
 ├── V6__repair_orphan_course_categories.sql
 ├── V7__translate_seed_data_to_spanish.sql
 ├── V8__change_enrollment_status_to_varchar.sql
-└── V9__add_matching_youtube_links_to_html_css_lessons.sql
+├── V9__add_matching_youtube_links_to_html_css_lessons.sql
+└── V10__fix_progress_trigger_enrollment_status.sql
 ```
 
 Regla de equipo: no modificar migraciones `V` ya aplicadas. Para cambios nuevos se agrega una migración nueva:
@@ -520,26 +604,123 @@ Flyway valida checksums y Spring Boot usa `spring.jpa.hibernate.ddl-auto=validat
 
 ---
 
-## API principal
+## Tabla de rutas del backend
 
-| Recurso | Endpoint base |
-|---|---|
-| Usuarios | `/api/users` |
-| Categorías | `/api/categories` |
-| Cursos | `/api/courses` |
-| Módulos | `/api/modules` |
-| Lecciones | `/api/lessons` |
-| Inscripciones | `/api/enrollments` |
-| Progreso de lección | `/api/lesson-progress` |
-| Certificados | `/api/certificates` |
-| Comentarios | `/api/comments` |
-| Reseñas | `/api/reviews` |
+| Módulo | Método | Endpoint | Descripción |
+|---|---:|---|---|
+| Usuarios | GET | `/api/users` | Lista usuarios registrados |
+| Usuarios | GET | `/api/users/{id}` | Obtiene un usuario por ID |
+| Usuarios | POST | `/api/users` | Crea un usuario |
+| Usuarios | PUT | `/api/users/{id}` | Actualiza un usuario |
+| Usuarios | DELETE | `/api/users/{id}` | Elimina un usuario |
+| Categorías | GET | `/api/categories` | Lista categorías |
+| Categorías | GET | `/api/categories/{id}` | Obtiene una categoría por ID |
+| Categorías | POST | `/api/categories` | Crea una categoría |
+| Categorías | PUT | `/api/categories/{id}` | Actualiza una categoría |
+| Categorías | DELETE | `/api/categories/{id}` | Elimina una categoría |
+| Cursos | GET | `/api/courses` | Lista cursos |
+| Cursos | GET | `/api/courses/{id}` | Obtiene un curso por ID |
+| Cursos | POST | `/api/courses` | Crea un curso |
+| Cursos | PUT | `/api/courses/{id}` | Actualiza un curso |
+| Cursos | DELETE | `/api/courses/{id}` | Elimina un curso |
+| Módulos | GET | `/api/modules` | Lista módulos |
+| Módulos | GET | `/api/modules/{id}` | Obtiene un módulo por ID |
+| Módulos | POST | `/api/modules` | Crea un módulo |
+| Módulos | PUT | `/api/modules/{id}` | Actualiza un módulo |
+| Módulos | DELETE | `/api/modules/{id}` | Elimina un módulo |
+| Lecciones | GET | `/api/lessons` | Lista lecciones |
+| Lecciones | GET | `/api/lessons/{id}` | Obtiene una lección por ID |
+| Lecciones | GET | `/api/lessons/module/{moduleId}` | Lista lecciones de un módulo |
+| Lecciones | POST | `/api/lessons` | Crea una lección |
+| Lecciones | PUT | `/api/lessons/{id}` | Actualiza una lección |
+| Lecciones | DELETE | `/api/lessons/{id}` | Elimina una lección |
+| Inscripciones | GET | `/api/enrollments` | Lista inscripciones |
+| Inscripciones | GET | `/api/enrollments/{id}` | Obtiene una inscripción por ID |
+| Inscripciones | GET | `/api/enrollments/user/{userId}` | Lista inscripciones de un usuario |
+| Inscripciones | GET | `/api/enrollments/course/{courseId}` | Lista inscripciones de un curso |
+| Inscripciones | POST | `/api/enrollments` | Crea una inscripción |
+| Inscripciones | PATCH | `/api/enrollments/{id}/status` | Actualiza el estado de una inscripción |
+| Inscripciones | DELETE | `/api/enrollments/{id}` | Elimina una inscripción |
+| Progreso de lección | GET | `/api/lesson-progress` | Lista registros de progreso |
+| Progreso de lección | GET | `/api/lesson-progress/{id}` | Obtiene un progreso por ID |
+| Progreso de lección | GET | `/api/lesson-progress/enrollment/{enrollmentId}/lesson/{lessonId}` | Obtiene progreso por inscripción y lección |
+| Progreso de lección | GET | `/api/lesson-progress/enrollment/{enrollmentId}` | Lista progreso de una inscripción |
+| Progreso de lección | GET | `/api/lesson-progress/lesson/{lessonId}` | Lista progreso de una lección |
+| Progreso de lección | PUT | `/api/lesson-progress` | Crea o actualiza progreso |
+| Progreso de lección | DELETE | `/api/lesson-progress/{id}` | Elimina un registro de progreso |
+| Certificados | GET | `/api/certificates` | Lista certificados |
+| Certificados | GET | `/api/certificates/{id}` | Obtiene un certificado por ID |
+| Certificados | GET | `/api/certificates/{id}/download` | Descarga certificado PDF |
+| Certificados | POST | `/api/certificates` | Emite un certificado |
+| Certificados | PUT | `/api/certificates/{id}` | Actualiza un certificado |
+| Certificados | DELETE | `/api/certificates/{id}` | Elimina un certificado |
+| Comentarios | GET | `/api/comments` | Lista comentarios |
+| Comentarios | GET | `/api/comments/{id}` | Obtiene un comentario por ID |
+| Comentarios | POST | `/api/comments` | Crea un comentario |
+| Comentarios | PUT | `/api/comments/{id}` | Actualiza un comentario |
+| Comentarios | DELETE | `/api/comments/{id}` | Elimina un comentario |
+| Reseñas | GET | `/api/reviews` | Lista reseñas |
+| Reseñas | GET | `/api/reviews/{id}` | Obtiene una reseña por ID |
+| Reseñas | POST | `/api/reviews` | Crea una reseña |
+| Reseñas | PUT | `/api/reviews/{id}` | Actualiza una reseña |
+| Reseñas | DELETE | `/api/reviews/{id}` | Elimina una reseña |
 
 Swagger UI está disponible en:
 
 ```text
 http://localhost:8080/swagger-ui.html
 ```
+
+---
+
+## Evidencias de funcionamiento
+
+Las capturas deben colocarse en `docs/evidencias/` para que el README las muestre directamente. Se recomienda capturar la aplicación después de levantarla con `docker compose up --build`.
+
+### Documentación Swagger
+
+| Evidencia | Ruta sugerida | Descripción |
+|---|---|---|
+| Swagger UI general | `docs/evidencias/swagger-ui.png` | Vista principal de Swagger con los módulos de la API |
+| Endpoint de certificados | `docs/evidencias/swagger-certificates.png` | Prueba visual de endpoints de certificados |
+| Endpoint de progreso | `docs/evidencias/swagger-lesson-progress.png` | Prueba visual de endpoints de progreso de lecciones |
+
+![Swagger UI](docs/evidencias/swagger-ui.png)
+
+![Swagger Certificates](docs/evidencias/swagger-certificates.png)
+
+![Swagger Lesson Progress](docs/evidencias/swagger-lesson-progress.png)
+
+### Capturas de vistas principales
+
+| Vista | Ruta sugerida | Qué debe mostrar |
+|---|---|---|
+| Inicio estudiante | `docs/evidencias/vista-estudiante-inicio.png` | Dashboard del estudiante con cursos y progreso |
+| Explorar cursos | `docs/evidencias/vista-explorar-cursos.png` | Catálogo de cursos disponibles |
+| Reproductor de lecciones | `docs/evidencias/vista-player-leccion.png` | Lección, recursos y comentarios |
+| Diplomas del estudiante | `docs/evidencias/vista-diplomas-estudiante.png` | Certificados disponibles o estado vacío |
+| Panel administrador | `docs/evidencias/vista-admin-panel.png` | Accesos de gestión administrativa |
+| Gestión de módulos | `docs/evidencias/vista-admin-modulos.png` | CRUD de módulos conectado a la API |
+| Gestión de lecciones | `docs/evidencias/vista-admin-lecciones.png` | CRUD de lecciones conectado a la API |
+| Panel docente | `docs/evidencias/vista-docente-panel.png` | Cursos y contenido asignado al docente |
+
+![Inicio estudiante](docs/evidencias/vista-estudiante-inicio.png)
+
+![Explorar cursos](docs/evidencias/vista-explorar-cursos.png)
+
+![Reproductor de lecciones](docs/evidencias/vista-player-leccion.png)
+
+![Diplomas estudiante](docs/evidencias/vista-diplomas-estudiante.png)
+
+![Panel administrador](docs/evidencias/vista-admin-panel.png)
+
+![Gestión de módulos](docs/evidencias/vista-admin-modulos.png)
+
+![Gestión de lecciones](docs/evidencias/vista-admin-lecciones.png)
+
+![Panel docente](docs/evidencias/vista-docente-panel.png)
+
+> Nota: si las imágenes aún no existen, crear la carpeta `docs/evidencias/`, guardar las capturas con los nombres indicados y confirmar que Git las incluya en el repositorio.
 
 ---
 

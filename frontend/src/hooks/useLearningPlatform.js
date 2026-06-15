@@ -186,6 +186,21 @@ export function useLearningPlatform() {
     setView('player')
   }
 
+  function completeLessonInState(lessonId) {
+    setAppLessons((currentLessons) =>
+      currentLessons.map((lesson) =>
+        lesson.id === lessonId
+          ? { ...lesson, status: 'completed' }
+          : lesson
+      )
+    )
+    setActiveLesson((currentLesson) =>
+      currentLesson?.id === lessonId
+        ? { ...currentLesson, status: 'completed' }
+        : currentLesson
+    )
+  }
+
   function switchPersona(userId) {
     const user = appUsers.find((item) => item.id === userId)
     if (!user) return
@@ -245,7 +260,11 @@ export function useLearningPlatform() {
   }
 
   async function markCompleted() {
-    if (!selectedCourse?.enrollmentId || !activeLesson?.id) {
+    const lessonId = activeLesson?.id
+    if (!lessonId) return
+
+    if (!selectedCourse?.enrollmentId) {
+      completeLessonInState(lessonId)
       setCompletedMessage('Lección marcada localmente. Inscríbete al curso para guardar el progreso en tu cuenta.')
       clearCompletedMessage()
       return
@@ -254,10 +273,11 @@ export function useLearningPlatform() {
     try {
       await api.upsertLessonProgress({
         enrollmentId: selectedCourse.enrollmentId,
-        lessonId: activeLesson.id,
+        lessonId,
         secondsWatched: activeLesson.durationSeconds ?? 0,
         completed: true,
       })
+      completeLessonInState(lessonId)
       const updatedCourse = await refreshCurrentUserLearningState({
         issueCertificateForEnrollmentId: selectedCourse.enrollmentId,
       })

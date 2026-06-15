@@ -679,17 +679,26 @@ Las capturas deben colocarse en `docs/evidencias/` para que el README las muestr
 
 ### Documentación Swagger
 
-| Evidencia | Ruta sugerida | Descripción |
+| Evidencia | Archivo | Descripción |
 |---|---|---|
-| Swagger UI general | `docs/evidencias/swagger-ui.png` | Vista principal de Swagger con los módulos de la API |
-| Endpoint de certificados | `docs/evidencias/swagger-certificates.png` | Prueba visual de endpoints de certificados |
-| Endpoint de progreso | `docs/evidencias/swagger-lesson-progress.png` | Prueba visual de endpoints de progreso de lecciones |
+| Swagger 1 | `docs/evidencias/Swagger-1.png` | Vista de documentación Swagger generada por Springdoc/OpenAPI |
+| Swagger 2 | `docs/evidencias/Swagger-2.png` | Evidencia de endpoints disponibles en la API |
+| Swagger 3 | `docs/evidencias/Swagger-3.png` | Evidencia de operaciones REST documentadas |
+| Swagger 4 | `docs/evidencias/Swagger-4.png` | Evidencia de contratos de request/response |
+| Swagger 5 | `docs/evidencias/Swagger-5.png` | Evidencia de módulos adicionales de la API |
+| Swagger 6 | `docs/evidencias/Swagger-6.png` | Evidencia final de documentación interactiva |
 
-![Swagger UI](docs/evidencias/swagger-ui.png)
+![Swagger 1](docs/evidencias/Swagger-1.png)
 
-![Swagger Certificates](docs/evidencias/swagger-certificates.png)
+![Swagger 2](docs/evidencias/Swagger-2.png)
 
-![Swagger Lesson Progress](docs/evidencias/swagger-lesson-progress.png)
+![Swagger 3](docs/evidencias/Swagger-3.png)
+
+![Swagger 4](docs/evidencias/Swagger-4.png)
+
+![Swagger 5](docs/evidencias/Swagger-5.png)
+
+![Swagger 6](docs/evidencias/Swagger-6.png)
 
 ### Capturas de vistas principales
 
